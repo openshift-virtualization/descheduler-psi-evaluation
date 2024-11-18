@@ -14,11 +14,13 @@
 ### Installation
 
 1. Reconfigure the `node_exporter` 
-   `oc apply -f [manifests/mc-psi.yaml](mc-psi.yaml)`
+
+    $ oc apply -f [manifests/mc-psi.yaml](mc-psi.yaml)
 
 2. Deploy `descheduler operator`
    a. Install the descheduler operator as [documented here](TBD)
    b. Create the descheduler operator CR
-      `oc apply -f [manifests/descheduler-operator-cr.yaml](descheduler-operator-cr.yaml)`
+
+    $ oc apply -f [manifests/descheduler-operator-cr.yaml](descheduler-operator-cr.yaml)
 
 ### Uninstallation
