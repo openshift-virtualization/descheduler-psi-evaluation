@@ -1,0 +1,15 @@
+apiVersion: operator.openshift.io/v1
+kind: KubeDescheduler
+metadata:
+  name: cluster
+  namespace: openshift-kube-descheduler-operator
+spec:
+  managementState: Managed
+  devEnableEvictionsInBackground: true
+  deschedulingIntervalSeconds: 360
+  profiles:
+  - LongLifecycle
+  profileCustomizations:
+    devMetricsUtilization:
+      prometheus:
+        profile: CPUUsage
