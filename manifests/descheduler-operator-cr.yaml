@@ -9,5 +9,8 @@ spec:
   deschedulingIntervalSeconds: 360
   profiles:
   - LongLifecycle
+  - EvictPodsWithPVC
+  - EvictPodsWithLocalStorage
   profileCustomizations:
+    devEnableEvictionsInBackground: true
     devActualUtilizationProfile: PrometheusCPUPSIPressure
