@@ -10,6 +10,4 @@ spec:
   profiles:
   - LongLifecycle
   profileCustomizations:
-    devMetricsUtilization:
-      prometheus:
-        profile: CPUUsage
+    devActualUtilizationProfile: PrometheusCPUPSIPressure

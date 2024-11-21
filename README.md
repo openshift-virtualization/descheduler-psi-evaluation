@@ -19,7 +19,7 @@ to rebalance workloads according to the real node usage.
 > **Note**
 > You can also just simply run `bash to.sh deploy`
 
-1. [Reconfigure the worker machine pool](manifests/mc-psi.yaml) to provide PSI metrics via the `node_exporter` 
+1. [Reconfigure the worker machine pool](manifests/mc-psi.yaml) to enable PSI metrics at Kernel level and expose them via the `node_exporter`
 
        $ oc apply -f manifests/mc-psi.yaml
 
