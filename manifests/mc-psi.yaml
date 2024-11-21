@@ -3,7 +3,7 @@ kind: MachineConfig
 metadata:
   labels:
     machineconfiguration.openshift.io/role: worker
-  name: 99-openshift-machineconfig-worker-kargs
+  name: 99-openshift-machineconfig-worker-psi-karg
 spec:
   kernelArguments:
     - psi=1
