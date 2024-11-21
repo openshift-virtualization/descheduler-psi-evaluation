@@ -4,7 +4,7 @@ die() { echo "err: $@" ; exit 1; }
 _oc() { echo "$ oc $@" ; oc $@ ; }
 qoc() { oc $@ > /dev/null 2>&1; }
 
-SA=descheduler
+SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
 apply() {
@@ -15,8 +15,9 @@ apply() {
 
 deploy() {
   qoc get sa -n $NS $SA || die "Did not find descheduler ServiceAccount '$SA' in namespace '$NS'. Is it installed?"
-  _oc adm policy add-cluster-role-to-user cluster-monitoring-view -z $SA
+  _oc adm policy add-cluster-role-to-user cluster-monitoring-view -z $SA -n $NS
   apply
+  wait_for_mcp
 }
 
 destroy() {
