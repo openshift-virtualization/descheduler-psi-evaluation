@@ -21,14 +21,24 @@ to rebalance workloads according to the real node usage.
 
 1. [Reconfigure the worker machine pool](manifests/mc-psi.yaml) to enable PSI metrics at Kernel level and expose them via the `node_exporter`
 
+```bash
        $ oc apply -f manifests/mc-psi.yaml
+```
 
 2. Deploy Descheduler Operator
 
-   1. Install the descheduler operator as [documented here](TBD)
-   2. Create the [descheduler operator CR with proper eviciton and load awareness configured](manifests/descheduler-operator-cr.yaml)
+   1. Install the descheduler operator as [documented here](https://docs.openshift.com/container-platform/4.17/nodes/scheduling/descheduler/index.html)
+   2. Bind 'cluster-monitoring-view' cluster role to the service account used by the descheduler.
+
+```bash
+          $ oc adm policy add-cluster-role-to-user cluster-monitoring-view -z openshift-descheduler -n openshift-kube-descheduler-operator
+```
+ 
+   3. Create the [descheduler operator CR with proper eviciton and load awareness configured](manifests/descheduler-operator-cr.yaml)
       
+```bash
           $ oc apply -f manifests/descheduler-operator-cr.yaml
+```
 
 ### Uninstallation
 
