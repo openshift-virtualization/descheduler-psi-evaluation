@@ -8,7 +8,8 @@ SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
 apply() {
-  _oc apply -f manifests/mc-psi.yaml
+  _oc apply -f manifests/mc-psi-worker.yaml
+  _oc apply -f manifests/mc-psi-controlplane.yaml
   _oc apply -f manifests/descheduler-operator-cr.yaml
 }
 
@@ -21,14 +22,17 @@ deploy() {
 }
 
 destroy() {
-  _oc delete -f manifests/mc-psi.yaml
+  _oc delete -f manifests/mc-psi-worker.yaml
+  _oc delete -f manifests/mc-psi-controlplane.yaml
   _oc delete -f manifests/descheduler-operator-cr.yaml
 }
 
 
 wait_for_mcp() {
   x "oc wait mcp worker --for condition=Updated=False --timeout=10s"
+  x "oc wait mcp master --for condition=Updated=False --timeout=10s"
   x "oc wait mcp worker --for condition=Updated=True --timeout=15m"
+  x "oc wait mcp master --for condition=Updated=True --timeout=15m"
 }
 
 usage() {

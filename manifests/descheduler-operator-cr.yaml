@@ -4,8 +4,8 @@ metadata:
   name: cluster
   namespace: openshift-kube-descheduler-operator
 spec:
+  mode: Automatic
   managementState: Managed
-  devEnableEvictionsInBackground: true
   deschedulingIntervalSeconds: 360
   profiles:
   - LongLifecycle

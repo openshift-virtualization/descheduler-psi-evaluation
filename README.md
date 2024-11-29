@@ -10,7 +10,7 @@ to rebalance workloads according to the real node usage.
 ## Scope & Limitations
 
 - Limited to Virtual Machines run with OpenShift Virtualization
-- Limited to woker machine pools
+- Limited to worker machine pools (PSI metrics are needed also for master nodes)
 
 ## Usage
 
@@ -22,7 +22,8 @@ to rebalance workloads according to the real node usage.
 1. [Reconfigure the worker machine pool](manifests/mc-psi.yaml) to enable PSI metrics at Kernel level and expose them via the `node_exporter`
 
 ```bash
-       $ oc apply -f manifests/mc-psi.yaml
+       $ oc apply -f manifests/mc-psi-worker.yaml
+       $ oc apply -f manifests/mc-psi-controlplane.yaml
 ```
 
 2. Deploy Descheduler Operator
