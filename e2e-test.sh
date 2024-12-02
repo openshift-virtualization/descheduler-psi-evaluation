@@ -36,10 +36,24 @@ fi
 n
 c "Create workloads"
 x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
-c "oc wait --for jsonpath='.status.readyReplicas'=3 vmpool no-load"
-c "oc wait --for jsonpath='.status.readyReplicas'=3 vmpool cpu-load"
+c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool no-load"
+c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool cpu-load"
 
-TBD "wait for load and rebealance"
+n
+c "Give it some time to generate load"
+x "sleep 1m"
+
+n
+c "Ensure that we have load and see it in the PSI metrics"
+# https://access.redhat.com/articles/4894261
+x "oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode 'query=sum(irate(node_pressure_cpu_waiting_seconds_total[1m]))' http://localhost:9090/api/v1/query | tee /dev/stderr | jq -er '.data.result[0].value[1] > 0.1'"
+
+# Alerts
+# https://access.redhat.com/solutions/4250221
+#x "export ALERT_MANAGER=\$(oc get route alertmanager-main -n openshift-monitoring -o jsonpath='{@.spec.host}')"
+#assert "curl -s -k -H \"Authorization: Bearer \$(oc create token prometheus-k8s -n openshift-monitoring)\"  https://\$ALERT_MANAGER/api/v1/alerts | jq -e \".data | map(select(.labels.alertname == \\\"NodeSwapping\\\")) | .[0]\""
+
+TBD "rebealance"
 
 c "Delete workloads"
 x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
