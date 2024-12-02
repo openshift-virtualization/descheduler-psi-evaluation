@@ -4,7 +4,7 @@ kind: VirtualMachinePool
 metadata:
   name: cpu-load
 spec:
-  replicas: 3
+  replicas: 5
   selector:
     matchLabels:
       kubevirt.io/vmpool: cpu-load
