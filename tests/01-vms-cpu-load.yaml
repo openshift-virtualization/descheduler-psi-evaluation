@@ -2,24 +2,24 @@
 apiVersion: pool.kubevirt.io/v1alpha1
 kind: VirtualMachinePool
 metadata:
-  name: no-load
+  name: cpu-load
 spec:
   replicas: 3
   selector:
     matchLabels:
-      kubevirt.io/vmpool: no-load
+      kubevirt.io/vmpool: cpu-load
   virtualMachineTemplate:
     metadata:
       creationTimestamp: null
       labels:
-        kubevirt.io/vmpool: no-load
+        kubevirt.io/vmpool: cpu-load
     spec:
       runStrategy: Always
       template:
         metadata:
           creationTimestamp: null
           labels:
-            kubevirt.io/vmpool: no-load
+            kubevirt.io/vmpool: cpu-load
         spec:
           domain:
             devices:
