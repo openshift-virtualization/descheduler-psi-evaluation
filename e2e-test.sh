@@ -8,6 +8,7 @@ DRY=${DRY:-false}
 c() { echo "# $@" ; }
 n() { echo "" ; }
 x() { echo "\$ $@" ; ${DRY} || eval "$@" ; }
+TBD() { red c "TBD - $@"; }
 red() { echo -e "\e[0;31m$@\e[0m" ; }
 green() { echo -e "\e[0;32m$@\e[0m" ; }
 die() { red "FATAL: $@" ; exit 1 ; }
@@ -30,7 +31,15 @@ n
 c "Wait for MCP to pickup new MC"
 x "bash to.sh wait_for_mcp"
 
-c "FIXME do some testing"
+n
+c "Create workloads"
+x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+c "oc wait --for jsonpath='.status.replicas'=3"
+
+TBD "wait for load and rebealance"
+
+c "Delete workloads"
+x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
 
 n
 c "Delete the operator"
