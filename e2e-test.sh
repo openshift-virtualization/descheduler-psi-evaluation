@@ -36,6 +36,7 @@ fi
 n
 c "Create workloads"
 x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+# FIXME 5 is hardcoded
 c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool no-load"
 c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool cpu-load"
 
