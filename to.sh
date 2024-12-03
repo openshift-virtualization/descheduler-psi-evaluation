@@ -8,9 +8,13 @@ SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
 apply() {
-  _oc apply -f manifests/mc-psi-worker.yaml
-  _oc apply -f manifests/mc-psi-controlplane.yaml
-  _oc apply -f manifests/descheduler-operator-cr.yaml
+  _oc apply -f manifests/10-mc-psi-controlplane.yaml
+  _oc apply -f manifests/11-mc-psi-worker.yaml
+  _oc apply -f manifests/20-namespaces.yaml
+  _oc apply -f manifests/30-subscriptions.yaml
+  until _oc get crd hyperconverged ; do sleep 6 ; done
+  _oc apply -f manifests/40-cnv-operator-cr.yaml
+  _oc apply -f manifests/40-descheduler-operator-cr.yaml
 }
 
 
@@ -22,9 +26,12 @@ deploy() {
 }
 
 destroy() {
-  _oc delete -f manifests/mc-psi-worker.yaml
-  _oc delete -f manifests/mc-psi-controlplane.yaml
-  _oc delete -f manifests/descheduler-operator-cr.yaml
+  _oc apply -f manifests/10-mc-psi-controlplane.yaml
+  _oc apply -f manifests/11-mc-psi-worker.yaml
+  _oc apply -f manifests/20-namespaces.yaml
+  _oc apply -f manifests/30-subscriptions.yaml
+  _oc apply -f manifests/40-cnv-operator-cr.yaml
+  _oc apply -f manifests/40-descheduler-operator-cr.yaml
 }
 
 
