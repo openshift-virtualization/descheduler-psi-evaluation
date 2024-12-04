@@ -15,8 +15,8 @@ apply() {
   _oc apply -f manifests/31-subscriptions.yaml
   until _oc get crd hyperconvergeds.hco.kubevirt.io 2> /dev/null ; do echo . ; sleep 6 ; done
   until _oc get crd kubedeschedulers.operator.openshift.io 2> /dev/null ; do echo . ; sleep 6 ; done
-  _oc apply -f manifests/40-cnv-operator-cr.yaml
-  _oc apply -f manifests/40-descheduler-operator-cr.yaml
+  until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do sleep 6 ; done
+  until _oc apply -f manifests/40-descheduler-operator-cr.yaml ; do sleep 6 ; done
 }
 
 
