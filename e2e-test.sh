@@ -14,6 +14,8 @@ green() { echo -e "\e[0;32m$@\e[0m" ; }
 die() { red "FATAL: $@" ; exit 1 ; }
 assert() { echo "(assert:) \$ $@" ; { ${DRY} || eval $@ ; } || { echo "(assert?) FALSE" ; die "Assertion ret 0 failed: '$@'" ; } ; green "(assert?) True" ; }
 
+promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query | tee /dev/stderr ; }
+
 c "Assumption: 'oc' is present and has access to the cluster"
 assert "which oc"
 
@@ -25,24 +27,27 @@ fi
 n
 c "Create workloads"
 x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
-# FIXME 5 is hardcoded
-c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool no-load"
-c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool cpu-load"
+#c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool no-load"
+#c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool cpu-load"
 
 n
 c "Ensure that we have load and see it in the PSI metrics"
+export REPLICAS=1
 # https://access.redhat.com/articles/4894261
 export PROMQUERY="sum(irate(node_pressure_cpu_waiting_seconds_total[1m]))"
-export REPLICAS=1
-until x "oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode 'query=$PROMQUERY' http://localhost:9090/api/v1/query | tee /dev/stderr | jq -er '.data.result[0].value[1] > 0.5'";
+c "Wait for the pressure to be low"
+until x "promql '$PROMQUERY' | jq -er '(.data.result[0].value[1]|tonumber) < 0.4'"; do sleep 6 ; done
+
+c "Gradually increase the load and measure it"
+until x "promql '$PROMQUERY' | jq -er '(.data.result[0].value[1]|tonumber) > 1.0'";
 do
   c "Scale up the deployments to generate more load"
-  x "oc patch -p '{\"spec\": {\"replicas\": $REPLICAS}}' vmpool no-load"
-  x "oc patch -p '{\"spec\": {\"replicas\": $REPLICAS}}' vmpool cpu-load"
+  x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
+  x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool cpu-load"
   REPLICAS=$((REPLICAS + 1))
 
   c "Give it some time to generate load"
-  x "sleep 1m"
+  x "sleep 15s"
 done
 c "We saw the load increasing."
 
