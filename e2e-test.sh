@@ -14,7 +14,7 @@ green() { echo -e "\e[0;32m$@\e[0m" ; }
 die() { red "FATAL: $@" ; exit 1 ; }
 assert() { echo "(assert:) \$ $@" ; { ${DRY} || eval $@ ; } || { echo "(assert?) FALSE" ; die "Assertion ret 0 failed: '$@'" ; } ; green "(assert?) True" ; }
 
-promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query | tee /dev/stderr ; }
+promql() { ( set -x ; oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query ; ) | tee /dev/stderr ; }
 
 c "Assumption: 'oc' is present and has access to the cluster"
 assert "which oc"
@@ -23,6 +23,11 @@ if $WITH_DEPLOY;
 then
   x "bash to.sh deploy"
 fi
+
+TAINTED_NODE=$(oc get nodes -l node-role.kubernetes.io/worker -o name | head -n 1)
+n
+c "Going to taint node '$TAINTED_NODE' in order to rebalance workloads later"
+x "oc adm taint --overwrite node $TAINTED_NODE rebalance:NoSchedule"
 
 n
 c "Create workloads"
@@ -34,12 +39,13 @@ n
 c "Ensure that we have load and see it in the PSI metrics"
 export REPLICAS=1
 # https://access.redhat.com/articles/4894261
-export PROMQUERY="sum(irate(node_pressure_cpu_waiting_seconds_total[1m]))"
+get_load() { promql "sum(rate(node_pressure_cpu_waiting_seconds_total[1m]))" ; }
+
 c "Wait for the pressure to be low"
-until x "promql '$PROMQUERY' | jq -er '(.data.result[0].value[1]|tonumber) < 0.4'"; do sleep 6 ; done
+until x "get_load | jq -er '(.data.result[0].value[1]|tonumber) < 2'"; do sleep 6 ; done
 
 c "Gradually increase the load and measure it"
-until x "promql '$PROMQUERY' | jq -er '(.data.result[0].value[1]|tonumber) > 1.0'";
+until x "get_load | jq -er '(.data.result[0].value[1]|tonumber) > 3'";
 do
   c "Scale up the deployments to generate more load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
@@ -51,12 +57,18 @@ do
 done
 c "We saw the load increasing."
 
-# Alerts
-# https://access.redhat.com/solutions/4250221
-#x "export ALERT_MANAGER=\$(oc get route alertmanager-main -n openshift-monitoring -o jsonpath='{@.spec.host}')"
-#assert "curl -s -k -H \"Authorization: Bearer \$(oc create token prometheus-k8s -n openshift-monitoring)\"  https://\$ALERT_MANAGER/api/v1/alerts | jq -e \".data | map(select(.labels.alertname == \\\"NodeSwapping\\\")) | .[0]\""
+TBD "The whole section needs to be reworked"
+n
+nodes_with_vms() { promql "count(count by (node) (kubevirt_vmi_info) > 0)" ; }
+NODE_COUNT_WITH_TAINT=$(nodes_with_vms)
+c "With node '$TAINTED_NODE' tainted, the VMs are spread accross '$NODE_COUNT_WITH_TAINT' nodes"
 
-TBD "rebealance"
+n
+c "Remove the taint from node '$TAINTED_NODE' in order to rebalance the VMs"
+x "oc adm taint node $TAINTED_NODE rebalance:NoSchedule-"
+sleep 3m
+x "nodes_with_vms"
+
 
 c "Delete workloads"
 x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"

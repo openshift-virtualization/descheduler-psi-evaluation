@@ -6,7 +6,7 @@ metadata:
 spec:
   mode: Automatic
   managementState: Managed
-  deschedulingIntervalSeconds: 360
+  deschedulingIntervalSeconds: 60
   profiles:
   - LongLifecycle
   - EvictPodsWithPVC
