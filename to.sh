@@ -1,4 +1,5 @@
 i() { echo "i: $@"; }
+c() { echo "# $@"; }
 x() { echo "\$ $@" ; eval "$@" ; }
 die() { echo "err: $@" ; exit 1; }
 _oc() { echo "$ oc $@" ; oc $@ ; }
@@ -8,11 +9,14 @@ SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
 apply() {
+  c "Reconfigure node-exporter to export PSI"
   _oc apply -f manifests/10-mc-psi-controlplane.yaml
   _oc apply -f manifests/11-mc-psi-worker.yaml
+  c "Deploy operators"
   _oc apply -f manifests/20-namespaces.yaml
   _oc apply -f manifests/30-operatorgroup.yaml
   _oc apply -f manifests/31-subscriptions.yaml
+  c "Configure operators"
   until _oc get crd hyperconvergeds.hco.kubevirt.io 2> /dev/null ; do echo . ; sleep 6 ; done
   until _oc get crd kubedeschedulers.operator.openshift.io 2> /dev/null ; do echo . ; sleep 6 ; done
   until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do sleep 6 ; done
@@ -29,6 +33,7 @@ deploy() {
 }
 
 destroy() {
+  c "Delete the operators"
   _oc delete -f manifests/40-descheduler-operator-cr.yaml
   _oc delete -f manifests/40-cnv-operator-cr.yaml
   _oc delete -f manifests/31-subscriptions.yaml

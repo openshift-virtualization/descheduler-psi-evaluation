@@ -2,7 +2,7 @@
 #
 set -e
 
-WITH_DEPLOY=${WITH_DEPLOY:-true}
+WITH_DEPLOY=${WITH_DEPLOY:-false}
 DRY=${DRY:-false}
 
 c() { echo "# $@" ; }
@@ -19,18 +19,7 @@ assert "which oc"
 
 if $WITH_DEPLOY;
 then
-  c "# Reconfigure node-exporter to export PSI"
-
-  c "Ensure that all MCP workers are updated"
-  assert "oc get mcp worker -o json | jq -e '.status.conditions[] | select(.type == \"Updated\" and .status == \"True\")'"
-
-  n
-  c "Apply MachineConfig"
   x "bash to.sh deploy"
-
-  n
-  c "Wait for MCP to pickup new MC"
-  x "bash to.sh wait_for_mcp"
 fi
 
 n
@@ -70,7 +59,6 @@ x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
 if $WITH_DEPLOY;
 then
   n
-  c "Delete the operator"
   x "bash to.sh destroy"
   x "bash to.sh wait_for_mcp"
 fi
