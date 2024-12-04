@@ -4,7 +4,7 @@ kind: VirtualMachinePool
 metadata:
   name: no-load
 spec:
-  replicas: 5
+  replicas: 0
   selector:
     matchLabels:
       kubevirt.io/vmpool: no-load

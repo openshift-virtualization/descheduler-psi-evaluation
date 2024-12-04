@@ -41,13 +41,21 @@ c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool no-load"
 c "oc wait --for jsonpath='.status.readyReplicas'=5 vmpool cpu-load"
 
 n
-c "Give it some time to generate load"
-x "sleep 1m"
-
-n
 c "Ensure that we have load and see it in the PSI metrics"
 # https://access.redhat.com/articles/4894261
-x "oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode 'query=sum(irate(node_pressure_cpu_waiting_seconds_total[1m]))' http://localhost:9090/api/v1/query | tee /dev/stderr | jq -er '.data.result[0].value[1] > 0.1'"
+export PROMQUERY="sum(irate(node_pressure_cpu_waiting_seconds_total[1m]))"
+export REPLICAS=1
+until x "oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode 'query=$PROMQUERY' http://localhost:9090/api/v1/query | tee /dev/stderr | jq -er '.data.result[0].value[1] > 0.5'";
+do
+  c "Scale up the deployments to generate more load"
+  x "oc patch -p '{\"spec\": {\"replicas\": $REPLICAS}}' vmpool no-load"
+  x "oc patch -p '{\"spec\": {\"replicas\": $REPLICAS}}' vmpool cpu-load"
+  REPLICAS=$((REPLICAS + 1))
+
+  c "Give it some time to generate load"
+  x "sleep 1m"
+done
+c "We saw the load increasing."
 
 # Alerts
 # https://access.redhat.com/solutions/4250221
