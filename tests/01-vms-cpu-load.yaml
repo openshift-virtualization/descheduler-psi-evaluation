@@ -22,6 +22,8 @@ spec:
             kubevirt.io/vmpool: cpu-load
         spec:
           domain:
+            cpu:
+              cores: 4
             devices:
               disks:
               - disk:
