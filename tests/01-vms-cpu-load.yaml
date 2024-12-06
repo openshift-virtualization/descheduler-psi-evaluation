@@ -38,6 +38,7 @@ spec:
               rng: {}
             resources:
               requests:
+                cpu: "0.1"
                 memory: 512M
           networks:
           - name: default
@@ -53,5 +54,6 @@ spec:
                 password: fedora
                 chpasswd: { expire: False }
                 runcmd:
+                - "sleep 10 ; reboot"
                 - "xz -T 24 < /dev/zero > /dev/null"
             name: cloudinitdisk
