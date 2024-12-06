@@ -12,14 +12,16 @@ apply() {
   c "Reconfigure node-exporter to export PSI"
   _oc apply -f manifests/10-mc-psi-controlplane.yaml
   _oc apply -f manifests/11-mc-psi-worker.yaml
+  _oc apply -f manifests/12-mc-schedstats-worker.yaml
   c "Deploy operators"
   _oc apply -f manifests/20-namespaces.yaml
   _oc apply -f manifests/30-operatorgroup.yaml
   _oc apply -f manifests/31-subscriptions.yaml
   c "Configure operators"
-  until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done ; echo ""
-  until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do sleep 6 ; done
-  until _oc apply -f manifests/40-descheduler-operator-cr.yaml ; do sleep 6 ; done
+  until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done
+  until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done
+  until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done
+  echo ""
 }
 
 
@@ -33,7 +35,7 @@ deploy() {
 
 destroy() {
   c "Delete the operators"
-  _oc delete -f manifests/40-descheduler-operator-cr.yaml
+  _oc delete -f manifests/41-descheduler-operator-cr.yaml
   _oc delete -f manifests/40-cnv-operator-cr.yaml
   _oc delete -f manifests/31-subscriptions.yaml
   _oc delete -f manifests/30-operatorgroup.yaml
