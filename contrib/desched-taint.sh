@@ -2,7 +2,7 @@ handle() {
   TAINT="kubevirt.io/rebalance:PreferNoSchedule"
   oc_taint="echo oc adm taint node"
   tr -d '"' | while read LINE; do
-    if grep -qE "descheduler.*Number of evictions.*" <<<$LINE
+    if grep -qE "Processing node.*master-0" <<<$LINE
     then $oc_taint --all ${TAINT}- ; fi
     if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE
     then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; fi
@@ -39,10 +39,16 @@ EOF
   EXPECTED="oc adm taint node --all kubevirt.io/rebalance:PreferNoSchedule-
 oc adm taint node ci-ln-gi479l2-1d09d-g4n22-worker-centralus1-d9xt5 kubevirt.io/rebalance:PreferNoSchedule
 oc adm taint node ci-ln-gi479l2-1d09d-g4n22-worker-centralus2-xwfw7 kubevirt.io/rebalance:PreferNoSchedule
-oc adm taint node ci-ln-gi479l2-1d09d-g4n22-worker-centralus3-tdzxf kubevirt.io/rebalance:PreferNoSchedule
-oc adm taint node --all kubevirt.io/rebalance:PreferNoSchedule-"
+oc adm taint node ci-ln-gi479l2-1d09d-g4n22-worker-centralus3-tdzxf kubevirt.io/rebalance:PreferNoSchedule"
 
-  [[ "$EXPECTED" == "$(testdata | handle)" ]] && echo PASS || { echo FAIL ; echo -e "$EXPECTED" ; echo -e "$STDOUT" ; }
+  STDOUT="$(testdata | handle)"
+  [[ "$EXPECTED" == "$STDOUT" ]] && echo PASS || { echo FAIL ; echo -e "expected\n$EXPECTED" ; echo -e "stdout\n$STDOUT" ; }
 }
 
-${@:-handle}
+
+pilot() {
+  oc logs -n openshift-kube-descheduler-operator descheduler-74f8d65cf-5b62b | handle | bash -x
+}
+
+
+${@:-pilot}
