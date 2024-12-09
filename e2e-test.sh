@@ -24,10 +24,12 @@ assert "which oc"
 if $WITH_DEPLOY; then x "bash to.sh deploy"; fi
 
 n
+c "Taint node for in-balance"
 ALL_WORKER_NODES=$(oc get nodes -l node-role.kubernetes.io/worker --no-headers -o name | sort)
 ALL_WORKER_NODE_COUNT=$(wc -l <<<$ALL_WORKER_NODES)
 TAINTED_WORKER_NODE=$(head -n1 <<<$ALL_WORKER_NODES)
 c "Going to taint node '$TAINTED_WORKER_NODE' in order to rebalance workloads later"
+x "oc adm taint node --all rebalance:NoSchedule- || :"
 x "oc adm taint --overwrite node $TAINTED_WORKER_NODE rebalance:NoSchedule"
 
 n
@@ -70,7 +72,7 @@ export NODE_COUNT_WITH_TAINT=$(nodes_with_vms)
 export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
 c "With node '$TAINTED_WORKER_NODE' tainted, the VMs are spread accross '$NODE_COUNT_WITH_TAINT' nodes. The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
 assert "[[ $NODE_COUNT_WITH_TAINT < $ALL_WORKER_NODE_COUNT ]]"
-
+assert "[[ \$(oc get vmim | wc -l) == 0 ]]"
 n
 c "Remove the taint from node '$TAINTED_WORKER_NODE' in order to rebalance the VMs"
 x "oc adm taint node $TAINTED_WORKER_NODE rebalance:NoSchedule-"
@@ -79,10 +81,11 @@ x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"v
 c "Run often"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 12}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 x "sleep 5m"
+assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export NODE_COUNT_WITHOUT_TAINT=$(nodes_with_vms)
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
 assert "[[ $NODE_COUNT_WITH_TAINT < $NODE_COUNT_WITHOUT_TAINT ]]"
-assert "[[ $PRESSURE_STDDEV_WITH_TAINT < $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
+assert "[[ $PRESSURE_STDDEV_WITH_TAINT > $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
 
 
 n

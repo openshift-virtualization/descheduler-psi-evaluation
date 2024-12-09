@@ -23,7 +23,7 @@ spec:
         spec:
           domain:
             cpu:
-              cores: 8
+              cores: 24
             devices:
               disks:
               - disk:
