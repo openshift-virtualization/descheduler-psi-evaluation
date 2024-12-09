@@ -47,7 +47,7 @@ oc adm taint node ci-ln-gi479l2-1d09d-g4n22-worker-centralus3-tdzxf kubevirt.io/
 
 
 pilot() {
-  oc logs -n openshift-kube-descheduler-operator descheduler-74f8d65cf-5b62b | handle | bash -x
+    oc logs -f -n openshift-kube-descheduler-operator -l app=descheduler | tee /dev/stderr | handle
 }
 
 

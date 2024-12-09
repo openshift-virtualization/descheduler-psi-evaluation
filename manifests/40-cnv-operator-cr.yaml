@@ -36,6 +36,8 @@ spec:
 #  higherWorkloadDensity:
 #    memoryOvercommitPercentage: 100
 #  infra: {}
+  ksmConfiguration:
+    nodeLabelSelector: {}
 #  liveMigrationConfig:
 #    allowAutoConverge: false
 #    allowPostCopy: false

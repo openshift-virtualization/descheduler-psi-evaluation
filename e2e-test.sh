@@ -35,6 +35,7 @@ x "oc adm taint --overwrite node $TAINTED_WORKER_NODE rebalance:NoSchedule"
 n
 c "Create workloads"
 x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+x "sleep 30s"
 
 n
 c "Validate pressure generation and metrics"
@@ -47,18 +48,17 @@ BASE_LOAD=$(get_load)
 
 n
 c "Gradually increase the load and measure it"
-export REPLICAS=2
-until x "get_load | jq -er '(.|tonumber) > ($BASE_LOAD + 1)'";
+export REPLICAS=20
+#until x "get_load | jq -er '(.|tonumber) > ($BASE_LOAD + 1)'";
+until x "[[ \$(oc get vm | grep ErrorUnschedulable | wc -l) > 0 ]]"
 do
   c "Scale up the deployments to generate more load"
-  x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool cpu-load"
-  REPLICAS=$((REPLICAS + 2))
+  x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
+  REPLICAS=$((REPLICAS + 4))
 
   c "Give it some time to generate load"
-  x "sleep 30s"
-
-#  assert "[[ \$(oc get vm | grep ErrorUnschedulable | wc -l) == 0 ]]"
+  x "sleep 15s"
 done
 c "We saw the load increasing."
 x "sleep 1m"
@@ -73,13 +73,19 @@ export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
 c "With node '$TAINTED_WORKER_NODE' tainted, the VMs are spread accross '$NODE_COUNT_WITH_TAINT' nodes. The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
 assert "[[ $NODE_COUNT_WITH_TAINT < $ALL_WORKER_NODE_COUNT ]]"
 assert "[[ \$(oc get vmim | wc -l) == 0 ]]"
+
 n
 c "Remove the taint from node '$TAINTED_WORKER_NODE' in order to rebalance the VMs"
 x "oc adm taint node $TAINTED_WORKER_NODE rebalance:NoSchedule-"
-c "Enable automatic mode"
+
+n
+c "Configure decsheduler for automatic mode and faster rebalancing"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
-c "Run often"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 12}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+#c "Spawn tainter"
+#x "sleep 10s"
+#bash contrib/desched-taint.sh &
+
 x "sleep 5m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export NODE_COUNT_WITHOUT_TAINT=$(nodes_with_vms)
