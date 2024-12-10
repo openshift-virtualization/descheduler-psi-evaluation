@@ -48,20 +48,20 @@ BASE_LOAD=$(get_load)
 
 n
 c "Gradually increase the load and measure it"
-export REPLICAS=20
-#until x "get_load | jq -er '(.|tonumber) > ($BASE_LOAD + 1)'";
-until x "[[ \$(oc get vm | grep ErrorUnschedulable | wc -l) > 0 ]]"
+export REPLICAS=2
+until x "get_load | jq -er '(.|tonumber) > ($BASE_LOAD + 0.8)'";
+#until x "[[ \$(oc get vm | grep ErrorUnschedulable | wc -l) > 0 ]]"
 do
   c "Scale up the deployments to generate more load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool cpu-load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
-  REPLICAS=$((REPLICAS + 4))
+  REPLICAS=$((REPLICAS + 1))
 
   c "Give it some time to generate load"
-  x "sleep 15s"
+  x "sleep 30s"
 done
-c "We saw the load increasing."
-x "sleep 1m"
+c "Let the system settle for a bit."
+x "sleep 3m"
 
 n
 c "Validate rebalance"
@@ -81,10 +81,7 @@ x "oc adm taint node $TAINTED_WORKER_NODE rebalance:NoSchedule-"
 n
 c "Configure decsheduler for automatic mode and faster rebalancing"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
-x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 12}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
-#c "Spawn tainter"
-#x "sleep 10s"
-#bash contrib/desched-taint.sh &
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 30}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
 x "sleep 5m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
@@ -97,7 +94,7 @@ assert "[[ $PRESSURE_STDDEV_WITH_TAINT > $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
 n
 c "Cleaning up."
 c "Delete workloads"
-#x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
 
 if $WITH_DEPLOY;
 then
