@@ -14,6 +14,14 @@ to rebalance workloads according to the real node usage.
 
 ## Usage
 
+```console
+$ bash to.sh deploy
+...
+$ bash to..sh apply ; WITH_DEPLOY=false bash e2e-test.sh 
+...
+$
+```
+
 ### Installation
 
 > **Note**
