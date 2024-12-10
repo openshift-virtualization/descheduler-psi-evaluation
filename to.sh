@@ -8,6 +8,12 @@ qoc() { oc $@ > /dev/null 2>&1; }
 SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
+tainter() {
+ x "oc delete -n $NS configmap desched-taint || :"
+ x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
+ x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
+}
+
 apply() {
   c "Reconfigure node-exporter to export PSI"
   _oc apply -f manifests/10-mc-psi-controlplane.yaml
@@ -17,18 +23,18 @@ apply() {
   _oc apply -f manifests/20-namespaces.yaml
   _oc apply -f manifests/30-operatorgroup.yaml
   _oc apply -f manifests/31-subscriptions.yaml
+  x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
+  x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
+  x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
 }
 
 
 deploy() {
   apply
-  x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
-  x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
-  x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
   wait_for_mcp
   qoc get sa -n $NS $SA || die "Did not find descheduler ServiceAccount '$SA' in namespace '$NS'. Is it installed?"
-  _oc adm policy add-cluster-role-to-user cluster-monitoring-view -z $SA -n $NS
-
+  _oc adm policy add-cluster-role-to-user cluster-monitoring-view -z $SA -n $NS  # for desched metrics
+  _oc adm policy add-cluster-role-to-user cluster-reader -z $SA -n $NS  # for tainter
 }
 
 destroy() {
