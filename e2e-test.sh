@@ -45,6 +45,7 @@ n
 c "Ensure that we have load and see it in the PSI metrics"
 c "Wait for the pressure to be low"
 BASE_LOAD=$(get_load)
+assert "[[ $BASE_LOAD < 0.2 ]]"
 
 n
 c "Gradually increase the load and measure it"
@@ -81,11 +82,17 @@ x "oc adm taint node $TAINTED_WORKER_NODE rebalance:NoSchedule-"
 n
 c "Configure decsheduler for automatic mode and faster rebalancing"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
-x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 30}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 20}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
 c "Let the descheduler run for a bit in order to rebalance the cluster"
 c "Use the following URL in order to monitor key metrics"
-echo $(oc get console cluster -o=jsonpath='{@.status.consoleURL}')'/monitoring/query-browser?query0=sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m]))&query1=count+by+(node)+(kubevirt_vmi_info{node%3D~".%2B"%2Cname%3D~"cpu.*"})+>+0&query2=stddev(sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m])))'
+c "Or the following command for watchin descheduler and taint actions:"
+bash to.sh monitor
+
+c
+c "Let's sleep for 30m in order for the cluster to rebelanace according to pressure"
+x "sleep 10m"
+x "sleep 10m"
 x "sleep 10m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export NODE_COUNT_WITHOUT_TAINT=$(nodes_with_vms)
@@ -94,7 +101,7 @@ assert "[[ $NODE_COUNT_WITH_TAINT < $NODE_COUNT_WITHOUT_TAINT ]]"
 assert "[[ $PRESSURE_STDDEV_WITH_TAINT > $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
 
 
-n
+#n
 c "Cleaning up."
 c "Delete workloads"
 x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
