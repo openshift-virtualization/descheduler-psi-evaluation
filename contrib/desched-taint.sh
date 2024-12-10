@@ -5,13 +5,17 @@ export PATH=/var/tmp/:$PATH
 
 handle() {
   TAINT="kubevirt.io/rebalance:PreferNoSchedule"
-  oc_taint="echo oc adm taint node"
+  oc_taint="echo oc adm taint node --overwrite"
   CYCLE_DONE=true
   tr -d '"' | while read LINE; do
-    if $CYCLE_DONE && grep -qE "Processing node" <<<$LINE
-    then $oc_taint --all ${TAINT}- ; CYCLE_DONE=false; fi
-    if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE
-    then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ; fi
+#    if $CYCLE_DONE && grep -qE "Processing node" <<<$LINE
+#    then $oc_taint --all ${TAINT}- ; CYCLE_DONE=false; fi
+
+
+    if grep -qE "nodeutilization.*Node is overutilized.*worker" <<<$LINE ;
+    then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ;
+    elif grep -qE "nodeutilization.*Node is (under|appr).*worker" <<<$LINE ;
+    then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT}- ; CYCLE_DONE=true ; fi
   done
   sleep 2
 }

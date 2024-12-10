@@ -24,7 +24,7 @@ spec:
         name: fedora
         resources: {}
         command: ["/usr/bin/bash"]
-        args: ["-x", "/app/desched-taint.sh"]
+        args: ["/app/desched-taint.sh"]
         volumeMounts:
         - name: "script"
           mountPath: "/app"
