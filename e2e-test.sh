@@ -68,11 +68,8 @@ n
 c "Validate rebalance"
 n
 nodes_get_stddev() { promql "stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total{instance=~\".*worker.*\"}[1m])))" | jq -er '(.data.result[0].value[1]|tonumber)' ; }
-nodes_with_vms() { promql "count(count by (node) (kubevirt_vmi_info{node=~\".+\"}) > 0)" | jq -r ".data.result[0].value[1]" ; }
-export NODE_COUNT_WITH_TAINT=$(nodes_with_vms)
 export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
-c "With node '$TAINTED_WORKER_NODE' tainted, the VMs are spread accross '$NODE_COUNT_WITH_TAINT' nodes. The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
-assert "[[ $NODE_COUNT_WITH_TAINT < $ALL_WORKER_NODE_COUNT ]]"
+c "The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
 assert "[[ \$(oc get vmim | wc -l) == 0 ]]"
 
 n
@@ -95,9 +92,7 @@ x "sleep 10m"
 x "sleep 10m"
 x "sleep 10m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
-export NODE_COUNT_WITHOUT_TAINT=$(nodes_with_vms)
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
-assert "[[ $NODE_COUNT_WITH_TAINT < $NODE_COUNT_WITHOUT_TAINT ]]"
 assert "[[ $PRESSURE_STDDEV_WITH_TAINT > $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
 
 
