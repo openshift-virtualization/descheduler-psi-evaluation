@@ -23,7 +23,8 @@ spec:
         spec:
           domain:
             cpu:
-              cores: 24
+              model: Broadwell
+              cores: 12
             devices:
               disks:
               - disk:
@@ -36,6 +37,8 @@ spec:
               - masquerade: {}
                 name: default
               rng: {}
+            memory:
+              guest: 512M
             resources:
               requests:
                 cpu: "0.1"
@@ -54,5 +57,6 @@ spec:
                 password: fedora
                 chpasswd: { expire: False }
                 runcmd:
-                - "xz -T 0 < /dev/zero > /dev/null"
+                - "openssl speed -multi 24"
+                - "systemctl reboot"
             name: cloudinitdisk
