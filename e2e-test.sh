@@ -83,7 +83,10 @@ c "Configure decsheduler for automatic mode and faster rebalancing"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 30}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
-x "sleep 5m"
+c "Let the descheduler run for a bit in order to rebalance the cluster"
+c "Use the following URL in order to monitor key metrics"
+echo $(oc get console cluster -o=jsonpath='{@.status.consoleURL}')'/monitoring/query-browser?query0=sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m]))&query1=count+by+(node)+(kubevirt_vmi_info{node%3D~".%2B"%2Cname%3D~"cpu.*"})+>+0&query2=stddev(sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m])))'
+x "sleep 10m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export NODE_COUNT_WITHOUT_TAINT=$(nodes_with_vms)
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
