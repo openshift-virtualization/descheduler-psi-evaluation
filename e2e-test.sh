@@ -18,10 +18,15 @@ assert() { echo "(assert:) \$ $@" ; { ${DRY} || eval $@ ; } || { echo "(assert?)
 promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query | tee /dev/stderr ; }
 get_load() { promql "sum(rate(node_pressure_cpu_waiting_seconds_total{instance=~\".*worker.*\"}[1m]))" | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 
+cleanup() { c "Cleanup leftovers" ; oc apply -f manifests/41-descheduler-operator-cr.yaml || : ; oc delete --ignore-not-found=true -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml ; oc adm taint node --all rebalance:NoSchedule- || : ; }
+
 c "Assumption: 'oc' is present and has access to the cluster"
 assert "which oc"
 
 if $WITH_DEPLOY; then x "bash to.sh deploy"; fi
+
+trap cleanup EXIT
+cleanup
 
 n
 c "Taint node for in-balance"
