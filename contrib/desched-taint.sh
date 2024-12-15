@@ -4,13 +4,11 @@ test -d /app && { cd /var/tmp && curl -L http://downloads.openshift-console.svc.
 export PATH=/var/tmp/:$PATH
 
 handle() {
-  TAINT="kubevirt.io/rebalance:PreferNoSchedule"
+  TAINT="xNodePressure:PreferNoSchedule"
   oc_taint="echo oc adm taint node --overwrite"
   CYCLE_DONE=true
   tr -d '"' | while read LINE; do
-#    if $CYCLE_DONE && grep -qE "Processing node" <<<$LINE
-#    then $oc_taint --all ${TAINT}- ; CYCLE_DONE=false; fi
-
+#    oc get -o yaml -n openshift-kube-descheduler-operator KubeDescheduler cluster| grep -q Predictive && continue
 
     if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE ;
     then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ;

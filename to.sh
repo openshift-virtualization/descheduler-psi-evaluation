@@ -10,9 +10,12 @@ NS=openshift-kube-descheduler-operator
 
 tainter() {
   x "oc delete -n $NS configmap desched-taint || :"
-  x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
-  x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
-  _oc adm policy add-cluster-role-to-user cluster-reader -z $SA -n $NS  # for tainter
+  x "oc delete -n $NS -f manifests/50-desched-taint.yaml || :"
+  if [[ "$1" != "del" ]]; then
+    x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
+    x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
+    _oc adm policy add-cluster-role-to-user cluster-reader -z $SA -n $NS  # for tainter
+  fi
 }
 
 apply() {

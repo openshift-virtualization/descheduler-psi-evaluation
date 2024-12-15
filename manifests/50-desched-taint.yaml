@@ -29,6 +29,7 @@ spec:
         - name: "script"
           mountPath: "/app"
       restartPolicy: Always
+      terminationGracePeriod: 0
       volumes:
       # kubectl create configmap config --from-file desched-taint.sh
         - name: "script"
