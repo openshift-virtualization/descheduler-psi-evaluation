@@ -7,9 +7,13 @@ handle() {
   TAINT="xNodePressure:PreferNoSchedule"
   oc_taint="echo oc adm taint node --overwrite"
   CYCLE_DONE=true
+  until bash -c 'oc get -o yaml -n openshift-kube-descheduler-operator KubeDescheduler cluster | grep -q "mode: Automatic"';
+  do
+    echo "echo Waiting for automatic mode"
+    sleep 1m
+  done
+  echo "echo automatic mode"
   tr -d '"' | while read LINE; do
-#    oc get -o yaml -n openshift-kube-descheduler-operator KubeDescheduler cluster| grep -q Predictive && continue
-
     if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE ;
     then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ;
     elif grep -qE "nodeutilization.*Node is (under|appr).*" <<<$LINE ;
@@ -77,7 +81,7 @@ oc adm taint node --all kubevirt.io/rebalance:PreferNoSchedule-"
 
 
 pilot() {
-    oc logs -f -n openshift-kube-descheduler-operator -l app=descheduler | tee /dev/stderr | handle
+    oc logs -f -n openshift-kube-descheduler-operator -l app=descheduler | tee /dev/stderr | handle | bash -x
 }
 
 

@@ -30,7 +30,7 @@ apply() {
   x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
   x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
   x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
-  tainter
+  #tainter
 }
 
 
@@ -49,6 +49,7 @@ monitor() {
 
 destroy() {
   c "Delete the operators"
+  _oc delete -f manifests/50-desched-taint.yaml
   _oc delete -f manifests/41-descheduler-operator-cr.yaml
   _oc delete -f manifests/40-cnv-operator-cr.yaml
   _oc delete -f manifests/31-subscriptions.yaml

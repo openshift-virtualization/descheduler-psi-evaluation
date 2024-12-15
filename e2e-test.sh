@@ -15,7 +15,7 @@ die() { red "FATAL: $@" ; exit 1 ; }
 assert() { echo "(assert:) \$ $@" ; { ${DRY} || eval $@ ; } || { echo "(assert?) FALSE" ; die "Assertion ret 0 failed: '$@'" ; } ; green "(assert?) True" ; }
 
 # https://access.redhat.com/articles/4894261
-promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query | tee /dev/stderr ; }
+promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query ; }
 
 c "Assumption: 'oc' is present and has access to the cluster"
 assert "which oc"
@@ -23,42 +23,42 @@ assert "which oc"
 if $WITH_DEPLOY; then x "bash to.sh deploy"; fi
 
 n
-c "Taint node for in-balance"
+c "Create workload definitions with 0 replicas (in order to scale down any existing pool)"
+x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+
+n
 ALL_WORKER_NODES=$(oc get nodes -l node-role.kubernetes.io/worker --no-headers -o name | sort)
 ALL_WORKER_NODE_COUNT=$(wc -l <<<$ALL_WORKER_NODES)
-TAINTED_WORKER_NODE=$(head -n1 <<<$ALL_WORKER_NODES)
-c "Going to taint node '$TAINTED_WORKER_NODE' in order to rebalance workloads later"
-x "oc adm taint node --all rebalance:NoSchedule- || :"
-x "oc adm taint --overwrite node $TAINTED_WORKER_NODE rebalance:NoSchedule"
 
-n
-c "Create workloads"
-x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
-x "sleep 30s"
+TAINT_COUNT=$(( ALL_WORKER_NODE_COUNT / 3 ))
+TAINTED_WORKER_NODES=$(head -n$TAINT_COUNT <<<$ALL_WORKER_NODES)
 
-n
-c "Validate pressure generation and metrics"
-n
+oc label --all rebalance_tainted- > /dev/null 2>&1 || :
+for N in $TAINTED_WORKER_NODES ; do x "oc label --overwrite $N rebalance_tainted=true" ; done
+
+c "Taint node in order to create an inbalance"
+c "Going to taint node(s) '$TAINTED_WORKER_NODES' in order to rebalance workloads later"
+oc adm taint node --all rebalance:NoSchedule- > /dev/null 2>&1 || :
+x "oc adm taint --overwrite node -l rebalance_tainted=true rebalance:NoSchedule"
 
 n
 c "Ensure that we have load and see it in the PSI metrics"
-c "Wait for the pressure to be low"
+c "Gather a baseline pressure and assert that it's below a threshold"
 get_load() {
-    promql 'sum(rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)"))' \
+    promql 'avg(rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)"))' \
     | jq -er '(.data.result[0].value[1]|tonumber)' ; }
-BASE_LOAD=$(get_load)
-assert "[[ $BASE_LOAD < 0.2 ]]"
+AVG_BASE_LOAD=$(get_load)
+assert "[[ $AVG_BASE_LOAD < 0.2 ]]"
 
 n
 c "Gradually increase the load and measure it"
-export REPLICAS=2
-until x "get_load | jq -er '(.|tonumber) > ($BASE_LOAD + 0.8)'";
-#until x "[[ \$(oc get vm | grep ErrorUnschedulable | wc -l) > 0 ]]"
+export REPLICAS=${REPLICAS_START:-$ALL_WORKER_NODE_COUNT}
+until x "get_load | tee /dev/stderr | jq -er '(.|tonumber) > 0.5'";
 do
   c "Scale up the deployments to generate more load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool cpu-load"
   x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": $REPLICAS}]' vmpool no-load"
-  REPLICAS=$((REPLICAS + 1))
+  REPLICAS=$(( REPLICAS + ALL_WORKER_NODE_COUNT ))
 
   c "Give it some time to generate load"
   x "sleep 30s"
@@ -70,15 +70,17 @@ n
 c "Validate rebalance"
 n
 nodes_get_stddev() {
-    promql 'stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)")))'
+    promql 'stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)")))' \
     | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
 c "The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
+oc delete --all vmim
 assert "[[ \$(oc get vmim | wc -l) == 0 ]]"
 
 n
-c "Remove the taint from node '$TAINTED_WORKER_NODE' in order to rebalance the VMs"
-x "oc adm taint node $TAINTED_WORKER_NODE rebalance:NoSchedule-"
+c "Remove the taint from node(s) '$TAINTED_WORKER_NODES' in order to rebalance the VMs"
+x "oc adm taint --overwrite node -l rebalance_tainted=true rebalance:NoSchedule-"
+oc label --all rebalance_tainted- > /dev/null 2>&1 || :
 
 n
 c "Configure decsheduler for automatic mode and faster rebalancing"
@@ -91,17 +93,15 @@ c "Or the following command for watchin descheduler and taint actions:"
 bash to.sh monitor
 
 c
-c "Let's sleep for 30m in order for the cluster to rebelanace according to pressure"
-x "sleep 10m"
-x "sleep 10m"
+c "Let's give the cluster some time in order to rebelanace according to node pressure"
 x "sleep 10m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
-assert "[[ $PRESSURE_STDDEV_WITH_TAINT > $PRESSURE_STDDEV_WITHOUT_TAINT ]]"
+assert "[[ $PRESSURE_STDDEV_WITHOUT_TAINT < $PRESSURE_STDDEV_WITH_TAINT ]]"
 
-
-#n
+n
 c "Cleaning up."
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 c "Delete workloads"
 x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
 

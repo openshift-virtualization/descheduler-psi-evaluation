@@ -23,7 +23,7 @@ spec:
         spec:
           domain:
             cpu:
-              model: Broadwell
+              model: Penryn
               cores: 12
             devices:
               disks:
