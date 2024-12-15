@@ -16,7 +16,6 @@ assert() { echo "(assert:) \$ $@" ; { ${DRY} || eval $@ ; } || { echo "(assert?)
 
 # https://access.redhat.com/articles/4894261
 promql() { oc exec -c prometheus -n openshift-monitoring prometheus-k8s-0 -- curl -s --data-urlencode "query=$@" http://localhost:9090/api/v1/query | tee /dev/stderr ; }
-get_load() { promql "sum(rate(node_pressure_cpu_waiting_seconds_total{instance=~\".*worker.*\"}[1m]))" | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 
 c "Assumption: 'oc' is present and has access to the cluster"
 assert "which oc"
@@ -44,6 +43,9 @@ n
 n
 c "Ensure that we have load and see it in the PSI metrics"
 c "Wait for the pressure to be low"
+get_load() {
+    promql 'sum(rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)"))' \
+    | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 BASE_LOAD=$(get_load)
 assert "[[ $BASE_LOAD < 0.2 ]]"
 
@@ -67,7 +69,9 @@ x "sleep 3m"
 n
 c "Validate rebalance"
 n
-nodes_get_stddev() { promql "stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total{instance=~\".*worker.*\"}[1m])))" | jq -er '(.data.result[0].value[1]|tonumber)' ; }
+nodes_get_stddev() {
+    promql 'stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)")))'
+    | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
 c "The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
 assert "[[ \$(oc get vmim | wc -l) == 0 ]]"

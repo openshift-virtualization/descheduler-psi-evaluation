@@ -12,9 +12,9 @@ handle() {
 #    then $oc_taint --all ${TAINT}- ; CYCLE_DONE=false; fi
 
 
-    if grep -qE "nodeutilization.*Node is overutilized.*worker" <<<$LINE ;
+    if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE ;
     then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ;
-    elif grep -qE "nodeutilization.*Node is (under|appr).*worker" <<<$LINE ;
+    elif grep -qE "nodeutilization.*Node is (under|appr).*" <<<$LINE ;
     then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT}- ; CYCLE_DONE=true ; fi
   done
   sleep 2

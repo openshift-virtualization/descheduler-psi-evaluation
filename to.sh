@@ -39,7 +39,8 @@ deploy() {
 }
 
 monitor() {
-  echo $(oc get console cluster -o=jsonpath='{@.status.consoleURL}')'/monitoring/query-browser?query0=sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m]))&query1=count+by+(node)+(kubevirt_vmi_info{node%3D~".%2B"%2Cname%3D~"cpu.*"})+>+0&query2=stddev(sum+by+(instance)+(rate(node_pressure_cpu_waiting_seconds_total{instance%3D~".*worker.*"}[1m])))'
+  echo -n "$(oc get console cluster -o=jsonpath='{@.status.consoleURL}')"
+  echo '/monitoring/query-browser?query0=sum+by+%28instance%29+%28rate%28node_pressure_cpu_waiting_seconds_total%5B1m%5D%29+*+on%28instance%29+group_left%28node%29+label_replace%28kube_node_role%7Brole%3D%22worker%22%7D%2C+%27instance%27%2C+%22%241%22%2C+%27node%27%2C+%27%28.%2B%29%27%29%29&query1=stddev%28sum+by+%28instance%29+%28rate%28node_pressure_cpu_waiting_seconds_total%5B1m%5D%29+*+on%28instance%29+group_left%28node%29+label_replace%28kube_node_role%7Brole%3D%22worker%22%7D%2C+%27instance%27%2C+%22%241%22%2C+%27node%27%2C+%27%28.%2B%29%27%29%29%29'
   echo "$ oc logs -n openshift-kube-descheduler-operator -l app=desched-taint -f"
 }
 
