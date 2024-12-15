@@ -1,0 +1,61 @@
+---
+apiVersion: pool.kubevirt.io/v1alpha1
+kind: VirtualMachinePool
+metadata:
+  name: no-load
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      kubevirt.io/vmpool: no-load
+  virtualMachineTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        kubevirt.io/vmpool: no-load
+    spec:
+      runStrategy: Always
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            kubevirt.io/vmpool: no-load
+        spec:
+          domain:
+            cpu:
+              model: Penryn
+              cores: 12
+            devices:
+              disks:
+              - disk:
+                  bus: virtio
+                name: containerdisk
+              - disk:
+                  bus: virtio
+                name: cloudinitdisk
+              interfaces:
+              - masquerade: {}
+                name: default
+              rng: {}
+            memory:
+              guest: 512M
+            resources:
+              requests:
+                cpu: "0.1"
+                memory: 64M
+          networks:
+          - name: default
+            pod: {}
+          terminationGracePeriodSeconds: 0
+          volumes:
+          - containerDisk:
+              image: quay.io/containerdisks/fedora:latest
+            name: containerdisk
+          - cloudInitNoCloud:
+              userData: |-
+                #cloud-config
+                password: fedora
+                chpasswd: { expire: False }
+                runcmd:
+                - "sleep inf"
+            name: cloudinitdisk

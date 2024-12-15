@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: desched-taint
+  name: desched-taint
+  namespace: openshift-kube-descheduler-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: desched-taint
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: desched-taint
+    spec:
+      serviceAccountName: openshift-descheduler
+      containers:
+      - image: quay.io/fedora/fedora:latest
+        name: fedora
+        resources: {}
+        command: ["/usr/bin/bash"]
+        args: ["/app/desched-taint.sh"]
+        volumeMounts:
+        - name: "script"
+          mountPath: "/app"
+      restartPolicy: Always
+      terminationGracePeriod: 0
+      volumes:
+      # kubectl create configmap config --from-file desched-taint.sh
+        - name: "script"
+          configMap:
+            name: "desched-taint"
+status: {}

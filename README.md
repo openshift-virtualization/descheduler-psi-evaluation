@@ -14,6 +14,18 @@ to rebalance workloads according to the real node usage.
 
 ## Usage
 
+> [!NOTE]
+> - Use a cluster with at least 6 nodes
+> - The cluster should have no other workloads running
+
+```console
+$ bash to.sh deploy
+...
+$ bash to.sh apply ; WITH_DEPLOY=false bash e2e-test.sh
+...
+$
+```
+
 ### Installation
 
 > **Note**

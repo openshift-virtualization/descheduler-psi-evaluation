@@ -1,0 +1,19 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-cnv-abc123
+  namespace: openshift-cnv
+spec:
+  targetNamespaces:
+  - openshift-cnv
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-kube-descheduler-operator-abc123
+  namespace: openshift-kube-descheduler-operator
+spec:
+  targetNamespaces:
+  - openshift-kube-descheduler-operator
+  upgradeStrategy: Default
