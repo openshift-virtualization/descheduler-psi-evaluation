@@ -57,6 +57,5 @@ spec:
                 password: fedora
                 chpasswd: { expire: False }
                 runcmd:
-                - "openssl speed -multi 24"
-                - "systemctl reboot"
+                - "while true; do openssl speed -multi 24; sleep 2; done"
             name: cloudinitdisk
