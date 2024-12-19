@@ -80,7 +80,7 @@ n
 scale_up_post
 
 n
-c "Configure decsheduler for automatic mode and faster rebalancing"
+c "Configure descheduler for automatic mode and faster rebalancing"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 20}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
@@ -90,7 +90,7 @@ c "Or the following command for watchin descheduler and taint actions:"
 bash to.sh monitor
 
 c
-c "Let's give the cluster some time in order to rebelanace according to node pressure"
+c "Let's give the cluster some time in order to rebalance according to node pressure"
 x "sleep 10m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
