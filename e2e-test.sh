@@ -5,7 +5,7 @@ set -e
 WITH_DEPLOY=${WITH_DEPLOY:-false}
 DRY=${DRY:-false}
 
-c() { echo "# $@" ; }
+c() { echo "# $(date '+%Y-%m-%d %H:%M:%S') # $@" ; }
 n() { echo "" ; }
 x() { echo "\$ $@" ; ${DRY} || eval "$@" ; }
 TBD() { red c "TBD - $@"; }
