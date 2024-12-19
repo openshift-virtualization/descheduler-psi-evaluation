@@ -96,6 +96,9 @@ assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
 export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
 assert "[[ $PRESSURE_STDDEV_WITHOUT_TAINT < $PRESSURE_STDDEV_WITH_TAINT ]]"
 
+c "Wait 1h to ensure that the cluster is stable"
+x "sleep 3600"
+
 n
 c "Cleaning up."
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
