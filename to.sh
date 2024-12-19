@@ -11,10 +11,11 @@ NS=openshift-kube-descheduler-operator
 tainter() {
   x "oc delete -n $NS configmap desched-taint || :"
   x "oc delete -n $NS -f manifests/50-desched-taint.yaml || :"
+  x "oc adm policy remove-cluster-role-from-user system:controller:node-controller -z $SA -n $NS || :"
   if [[ "$1" != "del" ]]; then
     x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
     x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
-    _oc adm policy add-cluster-role-to-user cluster-reader -z $SA -n $NS  # for tainter
+    x "oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
   fi
 }
 
@@ -30,7 +31,7 @@ apply() {
   x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
   x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
   x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
-  #tainter
+  tainter
 }
 
 
@@ -55,6 +56,7 @@ destroy() {
   _oc delete -f manifests/31-subscriptions.yaml
   _oc delete -f manifests/30-operatorgroup.yaml
   _oc delete -f manifests/20-namespaces.yaml
+  tainter del
 #  _oc delete -f manifests/11-mc-psi-worker.yaml
 #  _oc delete -f manifests/10-mc-psi-controlplane.yaml
 }
