@@ -1,3 +1,10 @@
+
+> [!IMPORTANT]
+> This repository is not inteded to be used for production environments.
+> This repository is containing files to evaluate the PSI integration into the descheduler only.
+> For a production level integration please monitor the OpenShift Documentation in order to understand when this feature GAs.
+
+
 # Using the descheduler with PSI metrics
 
 PSI metrics expose node level pressure (or even cgroup). These metrics can be leveraged by the descheduler in order
