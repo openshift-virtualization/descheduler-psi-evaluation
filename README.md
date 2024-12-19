@@ -28,10 +28,13 @@ to rebalance workloads according to the real node usage.
 ```console
 $ bash to.sh deploy
 ...
-$ bash to.sh apply ; WITH_DEPLOY=false bash e2e-test.sh
+$ bash to.sh apply ; TEST_SCENARIO=1 WITH_DEPLOY=false bash e2e-test.sh
 ...
 $
 ```
+
+> **Note**
+> Two alternative test scenarios are available, replace `TEST_SCENARIO=1` with `TEST_SCENARIO=2` to switch to the second one.
 
 ### Installation
 
