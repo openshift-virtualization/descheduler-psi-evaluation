@@ -1,6 +1,6 @@
 
 > [!IMPORTANT]
-> This repository is not inteded to be used for production environments.
+> This repository is not inteded to be used in production environments.
 > This repository is containing files to evaluate the PSI integration into the descheduler only.
 > For a production level integration please monitor the OpenShift Documentation in order to understand when this feature GAs.
 
