@@ -22,47 +22,47 @@ to rebalance workloads according to the real node usage.
 ## Usage
 
 > [!NOTE]
-> - Use a cluster with at least 6 nodes
+> - Use a cluster with at least 6 worker nodes
 > - The cluster should have no other workloads running
+
+> [!NOTE]
+> Two alternative test scenarios are available, replace `TEST_SCENARIO=1` with `TEST_SCENARIO=2` to switch to the second one.
+
 
 ```console
 $ bash to.sh deploy
 ...
-$ bash to.sh apply ; TEST_SCENARIO=1 WITH_DEPLOY=false bash e2e-test.sh
+$ bash to.sh apply
+...
+$ TEST_SCENARIO=1 bash e2e-test.sh
 ...
 $
 ```
 
-> **Note**
-> Two alternative test scenarios are available, replace `TEST_SCENARIO=1` with `TEST_SCENARIO=2` to switch to the second one.
+### Deployment walk through
 
-### Installation
+Running `bash to.sh deploy` will deploy all necessary parts.
+In this section we are looking what exactly is getting deployed.
 
-> **Note**
-> You can also just simply run `bash to.sh deploy`
+1. Reconfiguration of the machine pools to enable PSI metrics at Kernel level and expose them via the `node_exporter`
 
-1. [Reconfigure the worker machine pool](manifests/mc-psi.yaml) to enable PSI metrics at Kernel level and expose them via the `node_exporter`
+       oc apply -f manifests/10-mc-psi-controlplane.yaml
+       oc apply -f manifests/11-mc-psi-worker.yaml
+       oc apply -f manifests/12-mc-schedstats-worker.yaml
 
-```bash
-       $ oc apply -f manifests/mc-psi-worker.yaml
-       $ oc apply -f manifests/mc-psi-controlplane.yaml
-```
+2. Deploy the Descheduler Operator and OpenShift Virtualization
 
-2. Deploy Descheduler Operator
+       oc apply -f manifests/20-namespaces.yaml
+       oc apply -f manifests/30-operatorgroup.yaml
+       oc apply -f manifests/31-subscriptions.yaml
 
-   1. Install the descheduler operator as [documented here](https://docs.openshift.com/container-platform/4.17/nodes/scheduling/descheduler/index.html)
-   2. Bind 'cluster-monitoring-view' cluster role to the service account used by the descheduler.
+       until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done
+       until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done
 
-```bash
-          $ oc adm policy add-cluster-role-to-user cluster-monitoring-view -z openshift-descheduler -n openshift-kube-descheduler-operator
-```
- 
-   3. Create the [descheduler operator CR with proper eviciton and load awareness configured](manifests/descheduler-operator-cr.yaml)
-      
-```bash
-          $ oc apply -f manifests/descheduler-operator-cr.yaml
-```
+       oc adm policy add-cluster-role-to-user cluster-monitoring-view -z $SA -n $NS  # for desched metrics
 
-### Uninstallation
+3. Deploy the node tainting component
 
-TBD
+       oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh
+       oc apply -n $NS -f manifests/50-desched-taint.yaml
+       oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
