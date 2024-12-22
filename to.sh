@@ -19,11 +19,14 @@ tainter() {
   fi
 }
 
-apply() {
+apply_mc() {
   c "Reconfigure node-exporter to export PSI"
   _oc apply -f manifests/10-mc-psi-controlplane.yaml
   _oc apply -f manifests/11-mc-psi-worker.yaml
   _oc apply -f manifests/12-mc-schedstats-worker.yaml
+}
+
+apply_operators() {
   c "Deploy operators"
   _oc apply -f manifests/20-namespaces.yaml
   _oc apply -f manifests/30-operatorgroup.yaml
@@ -31,9 +34,17 @@ apply() {
   x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
   x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
   x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
+}
+
+apply_node_tainter() {
   tainter
 }
 
+apply() {
+  apply_mc
+  apply_operators
+  apply_node_tainter
+}
 
 deploy() {
   apply

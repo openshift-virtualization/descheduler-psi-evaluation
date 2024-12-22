@@ -34,6 +34,10 @@ c "Test scenario:"
 echo -e $DESCRIPTION
 
 n
+c "Ensure that the descheduler is running predictive (dry-run) mode"
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+
+n
 c "Create workload definitions with 0 replicas (in order to scale down any existing pool)"
 x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
 
