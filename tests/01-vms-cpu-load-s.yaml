@@ -2,29 +2,29 @@
 apiVersion: pool.kubevirt.io/v1alpha1
 kind: VirtualMachinePool
 metadata:
-  name: cpu-load
+  name: cpu-load-s
 spec:
   replicas: 0
   selector:
     matchLabels:
-      kubevirt.io/vmpool: cpu-load
+      kubevirt.io/vmpool: cpu-load-s
   virtualMachineTemplate:
     metadata:
       creationTimestamp: null
       labels:
-        kubevirt.io/vmpool: cpu-load
+        kubevirt.io/vmpool: cpu-load-s
     spec:
       runStrategy: Always
       template:
         metadata:
           creationTimestamp: null
           labels:
-            kubevirt.io/vmpool: cpu-load
+            kubevirt.io/vmpool: cpu-load-s
         spec:
           domain:
             cpu:
               model: Penryn
-              cores: 12
+              cores: 2
             devices:
               disks:
               - disk:
@@ -41,7 +41,7 @@ spec:
               guest: 512M
             resources:
               requests:
-                cpu: "0.1"
+                cpu: "0.5"
                 memory: 64M
           networks:
           - name: default

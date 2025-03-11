@@ -2,29 +2,29 @@
 apiVersion: pool.kubevirt.io/v1alpha1
 kind: VirtualMachinePool
 metadata:
-  name: no-load
+  name: cpu-load-l
 spec:
   replicas: 0
   selector:
     matchLabels:
-      kubevirt.io/vmpool: no-load
+      kubevirt.io/vmpool: cpu-load-l
   virtualMachineTemplate:
     metadata:
       creationTimestamp: null
       labels:
-        kubevirt.io/vmpool: no-load
+        kubevirt.io/vmpool: cpu-load-l
     spec:
       runStrategy: Always
       template:
         metadata:
           creationTimestamp: null
           labels:
-            kubevirt.io/vmpool: no-load
+            kubevirt.io/vmpool: cpu-load-l
         spec:
           domain:
             cpu:
               model: Penryn
-              cores: 2
+              cores: 8
             devices:
               disks:
               - disk:
@@ -41,7 +41,7 @@ spec:
               guest: 512M
             resources:
               requests:
-                cpu: "0.5"
+                cpu: "2"
                 memory: 64M
           networks:
           - name: default
@@ -57,5 +57,5 @@ spec:
                 password: fedora
                 chpasswd: { expire: False }
                 runcmd:
-                - "sleep inf"
+                - "while true; do openssl speed -multi 24; sleep 2; done"
             name: cloudinitdisk

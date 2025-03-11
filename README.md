@@ -65,4 +65,13 @@ In this section we are looking what exactly is getting deployed.
 
        oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh
        oc apply -n $NS -f manifests/50-desched-taint.yaml
-       oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
+       oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS # for tainter
+       oc apply -n $NS -f manifests/51-desched-taint-podlog-role.yaml
+       oc adm policy add-role-to-user -n $NS --role-namespace=$NS  pod-and-pod-logs-reader -z $SA
+
+4. Deploy the dynamic thresholds component
+
+       oc create -n $NS configmap desched-dynthresholds --from-file contrib/desched-dynthresholds.sh
+       oc apply -n $NS -f manifests/52-desched-dynthresholds.yaml
+       oc apply -f manifests/53-desched-dynthreshold-podexec-clusterrole.yaml
+       oc adm policy add-cluster-role-to-user -n $NS pod-exec -z $SA

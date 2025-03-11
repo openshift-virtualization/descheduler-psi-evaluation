@@ -3,20 +3,20 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: desched-taint
-  name: desched-taint
+    app: desched-dynthresholds
+  name: desched-dynthresholds
   namespace: openshift-kube-descheduler-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: desched-taint
+      app: desched-dynthresholds
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: desched-taint
+        app: desched-dynthresholds
     spec:
       serviceAccountName: openshift-descheduler
       containers:
@@ -24,15 +24,15 @@ spec:
         name: fedora
         resources: {}
         command: ["/usr/bin/bash"]
-        args: ["/app/desched-taint.sh"]
+        args: ["/app/desched-dynthresholds.sh"]
         volumeMounts:
         - name: "script"
           mountPath: "/app"
       restartPolicy: Always
       terminationGracePeriod: 0
       volumes:
-      # kubectl create configmap desched-taint --from-file desched-taint.sh
+      # kubectl create configmap desched-dynthresholds --from-file desched-dynthresholds.sh
         - name: "script"
           configMap:
-            name: "desched-taint"
+            name: "desched-dynthresholds"
 status: {}

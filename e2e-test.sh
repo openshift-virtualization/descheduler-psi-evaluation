@@ -33,13 +33,26 @@ fi
 c "Test scenario:"
 echo -e $DESCRIPTION
 
+c "Scale down the operator to apply custom configurations:"
+x "oc scale --replicas=0 deployment -n openshift-kube-descheduler-operator descheduler-operator"
+x "oc get configmap -n openshift-kube-descheduler-operator cluster -o json | jq -r '.data[\"policy.yaml\"]' > policy.yaml"
+export TARGETTHRESHOLDS=60
+export THRESHOLDS=40
+export QUERY="avg by (instance) (1 - rate(node_cpu_seconds_total{mode='idle'}[1m]))"
+x "sed \"s/          query: .*$/          query: ${QUERY}/g\" -i policy.yaml"
+x "sed -z \"s/      targetThresholds:\n        MetricResource: [0-9]*\n/      targetThresholds:\n        MetricResource: ${TARGETTHRESHOLDS}\n/\" -i policy.yaml"
+x "sed -z \"s/      thresholds:\n        MetricResource: [0-9]*\n/      thresholds:\n        MetricResource: ${THRESHOLDS}\n/\" -i policy.yaml"
+x "oc delete configmap -n openshift-kube-descheduler-operator cluster"
+x "oc create configmap -n openshift-kube-descheduler-operator cluster --from-file=policy.yaml"
+x "oc delete pods -n openshift-kube-descheduler-operator -l=app=descheduler"
+
 n
 c "Ensure that the descheduler is running predictive (dry-run) mode"
-x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+x "oc patch deployment descheduler -n openshift-kube-descheduler-operator --type='json' -p='[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/0/args\", \"value\": [ \"--policy-config-file=/policy-dir/policy.yaml\", \"--logging-format=text\", \"--tls-cert-file=/certs-dir/tls.crt\", \"--tls-private-key-file=/certs-dir/tls.key\", \"--descheduling-interval=20s\", \"--feature-gates=EvictionsInBackground=true\", \"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256\", \"--tls-min-version=VersionTLS12\", \"--dry-run=true\", \"-v=2\" ]}]'"
 
 n
 c "Create workload definitions with 0 replicas (in order to scale down any existing pool)"
-x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+x "oc apply -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load-s.yaml -f tests/01-vms-cpu-load-m.yaml -f tests/01-vms-cpu-load-l.yaml"
 
 n
 export ALL_WORKER_NODES=$(oc get nodes -l node-role.kubernetes.io/worker --no-headers -o name | sort)
@@ -48,18 +61,20 @@ export ALL_WORKER_NODE_COUNT=$(wc -l <<<$ALL_WORKER_NODES)
 scale_up_pre
 
 n
-c "Ensure that we have load and see it in the PSI metrics"
-c "Gather a baseline pressure and assert that it's below a threshold"
+c "Ensure that we have load and see it in the utilization metrics"
+c "Gather a baseline utilization and assert that it's below a threshold"
 get_load() {
-    promql 'avg(rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)"))' \
+    promql 'avg(1 - rate(node_cpu_seconds_total{mode="idle"}[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)"))' \
     | jq -er '(.data.result[0].value[1]|tonumber)' ; }
 AVG_BASE_LOAD=$(get_load)
-assert "[[ $AVG_BASE_LOAD < $STDD_LOAD_L_TH ]]"
+assert "[[ $AVG_BASE_LOAD < $LOAD_L_TH ]]"
 
 n
 c "Gradually increase the load and measure it"
-export REPLICAS=${REPLICAS_START:-$INITIAL_REPLICAS}
-until x "get_load | tee /dev/stderr | jq -er '(.|tonumber) > $STDD_LOAD_H_TH'";
+export REPLICAS_S=${REPLICAS_START:-$INITIAL_REPLICAS}
+export REPLICAS_M=${REPLICAS_START:-$INITIAL_REPLICAS}
+export REPLICAS_L=${REPLICAS_START:-$INITIAL_REPLICAS}
+until x "get_load | tee /dev/stderr | jq -er '(.|tonumber) > $LOAD_H_TH'";
 do
   scale_up_load_s1
 done
@@ -73,10 +88,10 @@ n
 c "Validate rebalance"
 n
 nodes_get_stddev() {
-    promql 'stddev(sum by (instance) (rate(node_pressure_cpu_waiting_seconds_total[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)")))' \
+    promql 'stddev(avg by (instance) (1 - rate(node_cpu_seconds_total{mode="idle"}[1m]) * on(instance) group_left(node) label_replace(kube_node_role{role="worker"}, "instance", "$1", "node", "(.+)")))' \
     | jq -er '(.data.result[0].value[1]|tonumber)' ; }
-export PRESSURE_STDDEV_WITH_TAINT=$(nodes_get_stddev)
-c "The pressure stddev is '$PRESSURE_STDDEV_WITH_TAINT'."
+export UTILIZATION_STDDEV_WITH_TAINT=$(nodes_get_stddev)
+c "The utilization stddev is '$UTILIZATION_STDDEV_WITH_TAINT'."
 oc delete --all vmim
 assert "[[ \$(oc get vmim | wc -l) == 0 ]]"
 
@@ -85,8 +100,7 @@ scale_up_post
 
 n
 c "Configure descheduler for automatic mode and faster rebalancing"
-x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
-x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 20}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+x "oc patch deployment descheduler -n openshift-kube-descheduler-operator --type='json' -p='[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/0/args\", \"value\": [ \"--policy-config-file=/policy-dir/policy.yaml\", \"--logging-format=text\", \"--tls-cert-file=/certs-dir/tls.crt\", \"--tls-private-key-file=/certs-dir/tls.key\", \"--descheduling-interval=20s\", \"--feature-gates=EvictionsInBackground=true\", \"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256\", \"--tls-min-version=VersionTLS12\", \"--dry-run=false\", \"-v=2\" ]}]'"
 
 c "Let the descheduler run for a bit in order to rebalance the cluster"
 c "Use the following URL in order to monitor key metrics"
@@ -94,11 +108,19 @@ c "Or the following command for watchin descheduler and taint actions:"
 bash to.sh monitor
 
 c
-c "Let's give the cluster some time in order to rebalance according to node pressure"
-x "sleep 10m"
+c "Let's give the cluster some time in order to rebalance according to node utilization"
+x "sleep 5m"
 assert "[[ \$(oc get vmim | wc -l) > 0 ]]"
-export PRESSURE_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
-assert "[[ $PRESSURE_STDDEV_WITHOUT_TAINT < $PRESSURE_STDDEV_WITH_TAINT ]]"
+export UTILIZATION_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
+until x "nodes_get_stddev | tee /dev/stderr | jq -er '(.|tonumber) > $STDD_LOAD_TARGET'";
+do
+  export UTILIZATION_STDDEV_WITHOUT_TAINT=$(nodes_get_stddev)
+  c "The utilization stddev is '$UTILIZATION_STDDEV_WITHOUT_TAINT'."
+  c "Waiting for it to be < '$STDD_LOAD_TARGET'."
+  x "sleep 30"
+done
+
+assert "[[ $UTILIZATION_STDDEV_WITHOUT_TAINT < $UTILIZATION_STDDEV_WITH_TAINT ]]"
 
 c "Wait 1h to ensure that the cluster is stable"
 x "sleep 3600"
@@ -107,7 +129,7 @@ n
 c "Cleaning up."
 x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 c "Delete workloads"
-x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load.yaml"
+x "oc delete -f tests/00-vms-no-load.yaml -f tests/01-vms-cpu-load-s.yaml -f tests/01-vms-cpu-load-m.yaml -f tests/01-vms-cpu-load-l.yaml"
 
 if $WITH_DEPLOY;
 then

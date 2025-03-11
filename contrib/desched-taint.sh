@@ -4,10 +4,11 @@ test -d /app && { cd /var/tmp && curl -L http://downloads.openshift-console.svc.
 export PATH=/var/tmp/:$PATH
 
 handle() {
-  TAINT="xNodePressure:PreferNoSchedule"
+  TAINT_O="xNodeOverutilized:PreferNoSchedule"
+  TAINT_A="xNodeAppropriately:PreferNoSchedule"
   oc_taint="echo oc adm taint node --overwrite"
   CYCLE_DONE=true
-  until bash -c 'oc get -o yaml -n openshift-kube-descheduler-operator KubeDescheduler cluster | grep -q "mode: Automatic"';
+  until bash -c 'oc get -o yaml -n openshift-kube-descheduler-operator deployment descheduler | grep -q "dry-run=false"';
   do
     echo "echo Waiting for automatic mode"
     sleep 1m
@@ -15,9 +16,24 @@ handle() {
   echo "echo automatic mode"
   tr -d '"' | while read LINE; do
     if grep -qE "nodeutilization.*Node is overutilized.*" <<<$LINE ;
-    then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT} ; CYCLE_DONE=true ;
-    elif grep -qE "nodeutilization.*Node is (under|appr).*" <<<$LINE ;
-    then NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;  $oc_taint $NODE ${TAINT}- ; CYCLE_DONE=true ; fi
+    then
+      NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;
+      $oc_taint $NODE ${TAINT_O} ;
+      $oc_taint $NODE ${TAINT_A} ;
+      CYCLE_DONE=true ;
+    elif grep -qE "nodeutilization.*Node is appropriately.*" <<<$LINE ;
+    then
+      NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;
+      $oc_taint $NODE ${TAINT_O}- ;
+      $oc_taint $NODE ${TAINT_A} ;
+      CYCLE_DONE=true ;
+    elif grep -qE "nodeutilization.*Node is underutilized.*" <<<$LINE ;
+    then
+      NODE=$(echo "$LINE" | grep -E -o "node=[^ ]+" | cut -d= -f2-) ;
+      $oc_taint $NODE ${TAINT_O}- ;
+      $oc_taint $NODE ${TAINT_A}- ;
+      CYCLE_DONE=true ;
+    fi
   done
   sleep 2
 }
