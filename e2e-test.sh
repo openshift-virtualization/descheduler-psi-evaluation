@@ -33,22 +33,22 @@ fi
 c "Test scenario:"
 echo -e $DESCRIPTION
 
-c "Scale down the operator to apply custom configurations:"
-x "oc scale --replicas=0 deployment -n openshift-kube-descheduler-operator descheduler-operator"
-x "oc get configmap -n openshift-kube-descheduler-operator cluster -o json | jq -r '.data[\"policy.yaml\"]' > policy.yaml"
-export TARGETTHRESHOLDS=60
-export THRESHOLDS=40
-export QUERY="avg by (instance) (1 - rate(node_cpu_seconds_total{mode='idle'}[1m]))"
-x "sed \"s/          query: .*$/          query: ${QUERY}/g\" -i policy.yaml"
-x "sed -z \"s/      targetThresholds:\n        MetricResource: [0-9]*\n/      targetThresholds:\n        MetricResource: ${TARGETTHRESHOLDS}\n/\" -i policy.yaml"
-x "sed -z \"s/      thresholds:\n        MetricResource: [0-9]*\n/      thresholds:\n        MetricResource: ${THRESHOLDS}\n/\" -i policy.yaml"
-x "oc delete configmap -n openshift-kube-descheduler-operator cluster"
-x "oc create configmap -n openshift-kube-descheduler-operator cluster --from-file=policy.yaml"
-x "oc delete pods -n openshift-kube-descheduler-operator -l=app=descheduler"
+#c "Scale down the operator to apply custom configurations:"
+#x "oc scale --replicas=0 deployment -n openshift-kube-descheduler-operator descheduler-operator"
+#x "oc get configmap -n openshift-kube-descheduler-operator cluster -o json | jq -r '.data[\"policy.yaml\"]' > policy.yaml"
+#export TARGETTHRESHOLDS=60
+#export THRESHOLDS=40
+#export QUERY="avg by (instance) (1 - rate(node_cpu_seconds_total{mode='idle'}[1m]))"
+#x "sed \"s/          query: .*$/          query: ${QUERY}/g\" -i policy.yaml"
+#x "sed -z \"s/      targetThresholds:\n        MetricResource: [0-9]*\n/      targetThresholds:\n        MetricResource: ${TARGETTHRESHOLDS}\n/\" -i policy.yaml"
+#x "sed -z \"s/      thresholds:\n        MetricResource: [0-9]*\n/      thresholds:\n        MetricResource: ${THRESHOLDS}\n/\" -i policy.yaml"
+#x "oc delete configmap -n openshift-kube-descheduler-operator cluster"
+#x "oc create configmap -n openshift-kube-descheduler-operator cluster --from-file=policy.yaml"
+#x "oc delete pods -n openshift-kube-descheduler-operator -l=app=descheduler"
 
 n
 c "Ensure that the descheduler is running predictive (dry-run) mode"
-x "oc patch deployment descheduler -n openshift-kube-descheduler-operator --type='json' -p='[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/0/args\", \"value\": [ \"--policy-config-file=/policy-dir/policy.yaml\", \"--logging-format=text\", \"--tls-cert-file=/certs-dir/tls.crt\", \"--tls-private-key-file=/certs-dir/tls.key\", \"--descheduling-interval=20s\", \"--feature-gates=EvictionsInBackground=true\", \"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256\", \"--tls-min-version=VersionTLS12\", \"--dry-run=true\", \"-v=2\" ]}]'"
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Predictive\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
 n
 c "Create workload definitions with 0 replicas (in order to scale down any existing pool)"
@@ -100,7 +100,8 @@ scale_up_post
 
 n
 c "Configure descheduler for automatic mode and faster rebalancing"
-x "oc patch deployment descheduler -n openshift-kube-descheduler-operator --type='json' -p='[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/0/args\", \"value\": [ \"--policy-config-file=/policy-dir/policy.yaml\", \"--logging-format=text\", \"--tls-cert-file=/certs-dir/tls.crt\", \"--tls-private-key-file=/certs-dir/tls.key\", \"--descheduling-interval=20s\", \"--feature-gates=EvictionsInBackground=true\", \"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256\", \"--tls-min-version=VersionTLS12\", \"--dry-run=false\", \"-v=2\" ]}]'"
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/mode\", \"value\": \"Automatic\"}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
+x "oc patch --type=json -p '[{\"op\": \"replace\", \"path\": \"/spec/deschedulingIntervalSeconds\", \"value\": 20}]' -n openshift-kube-descheduler-operator KubeDescheduler cluster"
 
 c "Let the descheduler run for a bit in order to rebalance the cluster"
 c "Use the following URL in order to monitor key metrics"

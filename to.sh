@@ -8,16 +8,16 @@ qoc() { oc $@ > /dev/null 2>&1; }
 SA=openshift-descheduler
 NS=openshift-kube-descheduler-operator
 
-tainter() {
-  x "oc delete -n $NS configmap desched-taint || :"
-  x "oc delete -n $NS -f manifests/50-desched-taint.yaml || :"
-  x "oc adm policy remove-cluster-role-from-user system:controller:node-controller -z $SA -n $NS || :"
-  if [[ "$1" != "del" ]]; then
-    x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
-    x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
-    x "oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
-  fi
-}
+#tainter() {
+#  x "oc delete -n $NS configmap desched-taint || :"
+#  x "oc delete -n $NS -f manifests/50-desched-taint.yaml || :"
+#  x "oc adm policy remove-cluster-role-from-user system:controller:node-controller -z $SA -n $NS || :"
+#  if [[ "$1" != "del" ]]; then
+#    x "oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh"
+#    x "oc apply -n $NS -f manifests/50-desched-taint.yaml"
+#    x "oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
+#  fi
+#}
 
 apply_mc() {
   c "Reconfigure node-exporter to export PSI"
@@ -35,31 +35,31 @@ apply_operators() {
   x "until qoc get crd hyperconvergeds.hco.kubevirt.io kubedeschedulers.operator.openshift.io ; do echo -n . ; sleep 6 ; done"
   x "until _oc apply -f manifests/40-cnv-operator-cr.yaml ; do echo -n . sleep 6 ; done"
   x "until _oc apply -f manifests/41-descheduler-operator-cr.yaml ; do echo -n . sleep 6 ; done"
-  _oc scale --replicas=0 deployment -n openshift-kube-descheduler-operator descheduler-operator
-  _oc get configmap -n openshift-kube-descheduler-operator cluster -o json | jq -r '.data["policy.yaml"]' > policy.yaml
-  export TARGETTHRESHOLDS=60
-  export THRESHOLDS=40
+  #_oc scale --replicas=0 deployment -n openshift-kube-descheduler-operator descheduler-operator
+  #_oc get configmap -n openshift-kube-descheduler-operator cluster -o json | jq -r '.data["policy.yaml"]' > policy.yaml
+  #export TARGETTHRESHOLDS=60
+  #export THRESHOLDS=40
   export QUERY="avg by (instance) (1 - rate(node_cpu_seconds_total{mode='idle'}[1m]))"
-  x "sed \"s/          query: .*$/          query: ${QUERY}/g\" -i policy.yaml"
-  x "sed -z \"s/      targetThresholds:\n        MetricResource: [0-9]*\n/      targetThresholds:\n        MetricResource: ${TARGETTHRESHOLDS}\n/\" -i policy.yaml"
-  x "sed -z \"s/      thresholds:\n        MetricResource: [0-9]*\n/      thresholds:\n        MetricResource: ${THRESHOLDS}\n/\" -i policy.yaml"
-  if grep -q "targetThresholds" policy.yaml ; then
-    _oc delete configmap -n openshift-kube-descheduler-operator cluster
-    _oc create configmap -n openshift-kube-descheduler-operator cluster --from-file=policy.yaml
-    _oc delete pods -n openshift-kube-descheduler-operator -l=app=descheduler
-  else
-    print "broken file, skipping"
-  fi
+  #x "sed \"s/          query: .*$/          query: ${QUERY}/g\" -i policy.yaml"
+  #x "sed -z \"s/      targetThresholds:\n        MetricResource: [0-9]*\n/      targetThresholds:\n        MetricResource: ${TARGETTHRESHOLDS}\n/\" -i policy.yaml"
+  #x "sed -z \"s/      thresholds:\n        MetricResource: [0-9]*\n/      thresholds:\n        MetricResource: ${THRESHOLDS}\n/\" -i policy.yaml"
+  #if grep -q "targetThresholds" policy.yaml ; then
+  #  _oc delete configmap -n openshift-kube-descheduler-operator cluster
+  #  _oc create configmap -n openshift-kube-descheduler-operator cluster --from-file=policy.yaml
+  #  _oc delete pods -n openshift-kube-descheduler-operator -l=app=descheduler
+  #else
+  #  print "broken file, skipping"
+  #fi
 }
 
-apply_node_tainter() {
-  tainter
-}
+#apply_node_tainter() {
+#  tainter
+#}
 
 apply() {
   apply_mc
-  apply_operators
-  apply_node_tainter
+#  apply_operators
+#  apply_node_tainter
 }
 
 deploy() {
@@ -83,7 +83,7 @@ destroy() {
   _oc delete -f manifests/31-subscriptions.yaml
   _oc delete -f manifests/30-operatorgroup.yaml
   _oc delete -f manifests/20-namespaces.yaml
-  tainter del
+  #tainter del
 #  _oc delete -f manifests/11-mc-psi-worker.yaml
 #  _oc delete -f manifests/10-mc-psi-controlplane.yaml
 }
