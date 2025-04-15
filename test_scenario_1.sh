@@ -3,10 +3,9 @@
 set -e
 
 export DESCRIPTION="1. Taint 1/2 of the nodes\n2. Create cpu and no-load VMs till we detect significant utilization\n3. Remove taints and rebalance"
-export STDD_LOAD_TARGET=0.2
-export LOAD_L_TH=0.2
-#export LOAD_H_TH=0.40
-export LOAD_H_TH=0.50
+export STDD_LOAD_TARGET=0.10
+export LOAD_L_TH=0.10
+export LOAD_H_TH=0.25
 
 scale_up_pre() {
   TAINT_COUNT=$(( ALL_WORKER_NODE_COUNT / 2 ))
