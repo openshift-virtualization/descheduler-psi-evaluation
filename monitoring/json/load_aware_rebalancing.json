@@ -84,6 +84,19 @@
   "links": [],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 38,
+      "panels": [],
+      "title": "Node classification",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -112,7 +125,7 @@
         "h": 7,
         "w": 4,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 14,
       "options": {
@@ -170,7 +183,7 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -178,7 +191,7 @@
         "h": 7,
         "w": 4,
         "x": 4,
-        "y": 0
+        "y": 1
       },
       "id": 29,
       "options": {
@@ -391,7 +404,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 0
+        "y": 1
       },
       "id": 5,
       "options": {
@@ -493,225 +506,7 @@
           "useBackend": false
         }
       ],
-      "title": "CPU utilization by node",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": -1,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepBefore",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 1,
-            "pointSize": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 7
-      },
-      "id": 30,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "timezone": [
-          "browser"
-        ],
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (node) (\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n)",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{node}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "CPU utilization for VMs by node",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": -1,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepBefore",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 1,
-            "pointSize": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 7
-      },
-      "id": 33,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "timezone": [
-          "browser"
-        ],
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (node) (\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod!~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n)",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{node}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "CPU utilization for non VM pods by node",
+      "title": "Combined CPU utilization & PSI pressure by node",
       "type": "timeseries"
     },
     {
@@ -739,7 +534,7 @@
         "h": 7,
         "w": 4,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "id": 26,
       "options": {
@@ -801,7 +596,7 @@
         "h": 7,
         "w": 4,
         "x": 4,
-        "y": 14
+        "y": 8
       },
       "id": 27,
       "options": {
@@ -964,7 +759,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 14
+        "y": 8
       },
       "id": 25,
       "options": {
@@ -1044,6 +839,505 @@
       "type": "timeseries"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 37,
+      "panels": [],
+      "title": "CPU Utilization",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": -1,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepBefore",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "timezone": [
+          "browser"
+        ],
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (node) (\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n)",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{node}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "CPU utilization for VMs by node",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": -1,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepBefore",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 33,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "timezone": [
+          "browser"
+        ],
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (node) (\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod!~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n)",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{node}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "CPU utilization for non VM pods by node",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 39,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 0,
+            "y": 24
+          },
+          "id": 41,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "avg(descheduler:nodepressure:cpu:avg1m * on(instance) \n  group_left() \n  label_replace(\n    kube_node_role{role=\"worker\"}, \n    'instance', '$1', \n    'node', '(.+)'\n  ))",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Cluster average PSI CPU pressure (workers)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 4,
+            "y": 24
+          },
+          "id": 42,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "stddev(descheduler:nodepressure:cpu:avg1m * on(instance) group_left(node) label_replace(kube_node_role{role=\"worker\"}, 'instance', \"$1\", 'node', '(.+)'))",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Standard deviation of PSI CPU pressure (workers)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": -1,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "stepBefore",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 16,
+            "x": 8,
+            "y": 24
+          },
+          "id": 40,
+          "options": {
+            "legend": {
+              "calcs": [
+                "last"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "timezone": [
+              "browser"
+            ],
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "disableTextWrap": false,
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "descheduler:nodepressure:cpu:avg1m{instance=~\"$node\"} * on(instance) \n  group_left() \n  label_replace(\n    kube_node_role{role=\"worker\"}, \n    'instance', '$1', \n    'node', '(.+)'\n  )",
+              "fullMetaSearch": false,
+              "includeNullMetadata": true,
+              "instant": false,
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A",
+              "useBackend": false
+            }
+          ],
+          "title": "PSI CPU pressure by Worker Node",
+          "type": "timeseries"
+        }
+      ],
+      "title": "PSI Pressure",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 43,
+      "panels": [],
+      "title": "VMs",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -1070,7 +1364,7 @@
         "h": 8,
         "w": 4,
         "x": 0,
-        "y": 21
+        "y": 25
       },
       "id": 2,
       "options": {
@@ -1138,7 +1432,7 @@
         "h": 8,
         "w": 4,
         "x": 4,
-        "y": 21
+        "y": 25
       },
       "id": 32,
       "options": {
@@ -1167,7 +1461,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "irate(sum(kubevirt_vmi_migration_succeeded)[5m:])",
+          "expr": "irate(sum(kubevirt_vmi_migration_succeeded)[10m:])",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -1176,7 +1470,7 @@
           "refId": "B"
         }
       ],
-      "title": "Migrations",
+      "title": "Migration rate (10m)",
       "type": "stat"
     },
     {
@@ -1245,10 +1539,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 16,
         "x": 8,
-        "y": 21
+        "y": 25
       },
       "id": 24,
       "options": {
@@ -1286,207 +1580,221 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 29
+        "y": 33
       },
-      "id": 34,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true,
-          "sortBy": "Last *",
-          "sortDesc": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
+      "id": 44,
+      "panels": [
         {
-          "editorMode": "code",
-          "expr": "sort_desc(topk(10,\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n))",
-          "format": "time_series",
-          "legendFormat": "{{pod}}",
-          "range": true,
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "title": "Top consumers - VMs (% of CPU utilization on the node)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit"
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 134
+          },
+          "id": 34,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
             },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "editorMode": "code",
+              "expr": "sort_desc(topk(10,\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n))",
+              "format": "time_series",
+              "legendFormat": "{{pod}}",
+              "range": true,
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
               }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 29
-      },
-      "id": 35,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
+            }
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true,
-          "sortBy": "Last *",
-          "sortDesc": true
+          "title": "Top consumers - VMs (% of CPU utilization on the node)",
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.0",
-      "targets": [
         {
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sort_desc(topk(10,\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod!~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n))",
-          "format": "time_series",
-          "instant": false,
-          "legendFormat": "{{pod}}",
-          "range": true,
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
-          }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 134
+          },
+          "id": 35,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sort_desc(topk(10,\n  (\n    sum by (cluster, namespace, pod) (\n      avg_over_time(\n        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod!~\"virt-launcher.*\", node=~\"$node\"}[1m]\n      )\n    )\n    *\n    on (cluster, namespace, pod) group_left(node)\n    topk by (cluster, namespace, pod) (\n      1,\n      max by (cluster, namespace, pod, node) (\n        kube_pod_info{node!=\"\"}\n      )\n    )\n  )\n  /\n  on (node) group_left\n  machine_cpu_cores\n  *\n  on (node) group_left\n  kube_node_labels{label_kubevirt_io_schedulable=\"true\"}\n))",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{pod}}",
+              "range": true,
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              }
+            }
+          ],
+          "title": "Top consumers - other pods (% of CPU utilization on the node)",
+          "type": "timeseries"
         }
       ],
-      "title": "Top consumers - other pods (% of CPU utilization on the node)",
-      "type": "timeseries"
+      "title": "Top Consumers",
+      "type": "row"
     }
   ],
   "refresh": "1m",
@@ -1561,6 +1869,6 @@
   "timezone": "",
   "title": "Load Aware ReBalancing",
   "uid": "fekygyep7mbr4b",
-  "version": 107,
+  "version": 123,
   "weekStart": ""
 }
