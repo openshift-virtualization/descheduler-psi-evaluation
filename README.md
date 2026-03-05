@@ -66,3 +66,54 @@ In this section we are looking what exactly is getting deployed.
        oc create -n $NS configmap desched-taint --from-file contrib/desched-taint.sh
        oc apply -n $NS -f manifests/50-desched-taint.yaml
        oc adm policy add-cluster-role-to-user system:controller:node-controller -z $SA -n $NS" # for tainter
+
+## Monitoring
+
+Two dashboards are available for monitoring the descheduler behaviour.
+
+### Load Aware ReBalancing (Grafana)
+
+A Grafana dashboard for the PSI-based load-aware rebalancing profile.
+See [monitoring/README.md](monitoring/README.md) for deployment instructions.
+
+### Memory Aware Rebalancing (Perses — local)
+
+A [Perses](https://perses.dev) dashboard focused on the memory-aware aspects:
+synthetic utilization values, dynamic thresholds, PSI pressure, node classification
+over time, and evictions.
+
+The stack runs **locally** in containers and proxies to the remote cluster's Thanos
+querier, so no cluster-side deployment is required.
+
+**Prerequisites:** `podman` (or `docker`) with compose support, and an active `oc` login
+to the target cluster.
+
+```console
+$ cd monitoring/perses
+$ KUBECONFIG=/path/to/kubeconfig ./start.sh
+```
+
+Open **http://localhost:8080** and navigate to
+`Projects → descheduler → Dashboards → memory-aware-rebalancing`.
+
+To stop the stack:
+
+```console
+$ ./start.sh stop
+```
+
+To refresh an expired token (tokens are short-lived), simply re-run `./start.sh` —
+it regenerates `nginx.conf` with the new token and restarts the proxy container.
+
+#### What the dashboard shows
+
+| Section | Panels |
+| --- | --- |
+| Utilization | CPU utilization per node + fleet average (★); Memory utilization per node + fleet average |
+| Pressure | CPU PSI pressure per node + fleet average; Memory PSI pressure per node + fleet average |
+| Synthetic utilization value & thresholds | Per-node descheduler score with dynamic high (red dashed) and low (orange dashed) threshold bands |
+| Node classification | `StatusHistoryChart` — Underutilized / Normal / Overutilized per node over time |
+| Evictions | Total counter + per-node time series for `KubeVirtRelieveAndMigrate` |
+| Detailed metrics *(collapsed)* | CPU & memory pressure and utilization, each per node with fleet average overlaid |
+
+All panels are filterable by node via the **Node** variable at the top of the dashboard.

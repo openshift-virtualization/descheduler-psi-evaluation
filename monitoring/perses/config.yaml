@@ -1,0 +1,8 @@
+database:
+  file:
+    folder: "/perses"
+    extension: "json"
+
+provisioning:
+  folders:
+    - /etc/perses/provisioning

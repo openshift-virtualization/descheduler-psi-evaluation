@@ -1,0 +1,27 @@
+{
+  "kind": "GlobalDatasource",
+  "metadata": {
+    "name": "thanos-querier",
+    "createdAt": "0001-01-01T00:00:00Z",
+    "updatedAt": "0001-01-01T00:00:00Z",
+    "version": 0
+  },
+  "spec": {
+    "default": true,
+    "plugin": {
+      "kind": "PrometheusDatasource",
+      "spec": {
+        "proxy": {
+          "kind": "HTTPProxy",
+          "spec": {
+            "url": "http://nginx-proxy:9090",
+            "allowedEndpoints": [
+              {"endpointPattern": "/api/v1/.*", "method": "GET"},
+              {"endpointPattern": "/api/v1/.*", "method": "POST"}
+            ]
+          }
+        }
+      }
+    }
+  }
+}
