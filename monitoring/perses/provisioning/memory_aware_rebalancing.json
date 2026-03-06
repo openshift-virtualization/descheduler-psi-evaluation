@@ -27,6 +27,22 @@
             }
           }
         }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "name": "limit",
+          "display": {"name": "Max evictions shown", "hidden": false},
+          "allowMultiple": false,
+          "allowAllValue": false,
+          "defaultValue": "15",
+          "plugin": {
+            "kind": "StaticListVariable",
+            "spec": {
+              "values": ["10", "15", "20"]
+            }
+          }
+        }
       }
     ],
 
@@ -436,8 +452,44 @@
                 "plugin": {
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
-                    "query": "increase(descheduler_pods_evicted{profile=\"KubeVirtRelieveAndMigrate\", result=\"success\", node=~\"$node\"}[5m])",
+                    "query": "clamp_min(delta(descheduler_pods_evicted{profile=\"KubeVirtRelieveAndMigrate\", result=\"success\", node=~\"$node\"}[5m]), 0)",
                     "seriesNameFormat": "{{node}}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+
+      "evictionHistory": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Recent Evictions — by Node & Namespace",
+            "description": "Top $limit most recent evictions, one row per (node, namespace) pair, sorted by last eviction time. Timestamps are derived from when the descheduler_pods_evicted counter last changed — accuracy is within the scrape interval (~1–2 min). The 6 h lookback is relative to the end of the selected time window, not to wall-clock now."
+          },
+          "plugin": {
+            "kind": "Table",
+            "spec": {
+              "density": "compact",
+              "defaultColumnHidden": true,
+              "columnSettings": [
+                {"name": "node",               "header": "Node",         "enableSorting": true, "hide": false},
+                {"name": "exported_namespace", "header": "Namespace",    "enableSorting": true, "hide": false},
+                {"name": "value",              "header": "Last evicted", "enableSorting": true, "hide": false, "sort": "desc", "align": "right",
+                  "format": {"unit": "datetime-local"}}
+              ]
+            }
+          },
+          "queries": [
+            {
+              "kind": "TimeSeriesQuery",
+              "spec": {
+                "plugin": {
+                  "kind": "PrometheusTimeSeriesQuery",
+                  "spec": {
+                    "query": "topk($limit, max_over_time(timestamp(delta(descheduler_pods_evicted{profile=\"KubeVirtRelieveAndMigrate\", result=\"success\", node=~\"$node\"}[2m]) > 0)[6h:2m]))"
                   }
                 }
               }
@@ -545,7 +597,8 @@
           "items": [
             {"x": 0,  "y": 0, "width":  4, "height":  4, "content": {"$ref": "#/spec/panels/totalEvictions"}},
             {"x": 4,  "y": 0, "width": 20, "height":  8, "content": {"$ref": "#/spec/panels/evictionsTimeSeries"}},
-            {"x": 0,  "y": 8, "width": 24, "height":  8, "content": {"$ref": "#/spec/panels/evictionsRate"}}
+            {"x": 0,  "y": 8, "width": 24, "height":  8, "content": {"$ref": "#/spec/panels/evictionsRate"}},
+            {"x": 0,  "y": 16, "width": 24, "height": 10, "content": {"$ref": "#/spec/panels/evictionHistory"}}
           ]
         }
       },
