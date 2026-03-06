@@ -2,13 +2,19 @@
 # Starts a local Perses instance wired to the remote Thanos querier.
 #
 # Usage:
-#   ./start.sh                         # uses KUBECONFIG env var
+#   ./start.sh [start]                 # uses KUBECONFIG env var
 #   ./start.sh /path/to/kubeconfig     # uses the given kubeconfig
 #   ./start.sh stop                    # stops the stack
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# "start" is an accepted no-op keyword so callers can be explicit
+if [[ "${1:-}" == "start" ]]; then
+  shift
+fi
+
 KUBECONFIG="${1:-${KUBECONFIG:-}}"
 
 if [[ "${1:-}" == "stop" ]]; then
@@ -72,5 +78,5 @@ echo ""
 echo "Perses is starting at http://localhost:8080"
 echo "Dashboard: http://localhost:8080/projects/descheduler/dashboards/memory-aware-rebalancing"
 echo ""
-echo "To stop: $0 stop"
-echo "To refresh the token: $0 ${KUBECONFIG}"
+echo "To stop:          $0 stop"
+echo "To refresh token: $0 start"
