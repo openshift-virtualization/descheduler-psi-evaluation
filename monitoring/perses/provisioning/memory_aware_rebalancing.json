@@ -10,20 +10,24 @@
   "spec": {
     "duration": "1h",
     "refreshInterval": "1m",
-
     "variables": [
       {
         "kind": "ListVariable",
         "spec": {
           "name": "node",
-          "display": {"name": "Node", "hidden": false},
+          "display": {
+            "name": "Node",
+            "hidden": false
+          },
           "allowMultiple": true,
           "allowAllValue": true,
           "plugin": {
             "kind": "PrometheusLabelValuesVariable",
             "spec": {
               "labelName": "instance",
-              "matchers": ["descheduler:nodeutilization:cpu:avg1m"]
+              "matchers": [
+                "descheduler:nodeutilization:cpu:avg1m"
+              ]
             }
           }
         }
@@ -32,39 +36,53 @@
         "kind": "ListVariable",
         "spec": {
           "name": "limit",
-          "display": {"name": "Max evictions shown", "hidden": false},
+          "display": {
+            "name": "Max evictions shown",
+            "hidden": false
+          },
           "allowMultiple": false,
           "allowAllValue": false,
           "defaultValue": "15",
           "plugin": {
             "kind": "StaticListVariable",
             "spec": {
-              "values": ["10", "15", "20"]
+              "values": [
+                "10",
+                "15",
+                "20"
+              ]
             }
           }
         }
       }
     ],
-
     "panels": {
-
       "cpuUtilByNode": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "CPU Utilization — per Node",
-            "description": "CPU utilization over time for each node. The red ★ avg workers series is the fleet average — nodes far from it are candidates for rebalancing."
+            "name": "CPU Utilization \u2014 per Node",
+            "description": "CPU utilization over time for each node. The red \u2605 avg workers series is the fleet average \u2014 nodes far from it are candidates for rebalancing."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "list"},
+              "legend": {
+                "position": "right",
+                "mode": "list"
+              },
               "yAxis": {
                 "label": "CPU Utilization",
-                "format": {"unit": "percent-decimal"},
+                "format": {
+                  "unit": "percent-decimal"
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 1, "areaOpacity": 0.05},
+              "visual": {
+                "display": "line",
+                "lineWidth": 1,
+                "areaOpacity": 0.05
+              },
               "querySettings": [
                 {
                   "queryIndex": 1,
@@ -94,7 +112,7 @@
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
                     "query": "descheduler:averageworkersutilization:cpu:avg1m{}",
-                    "seriesNameFormat": "★ avg workers"
+                    "seriesNameFormat": "\u2605 avg workers"
                   }
                 }
               }
@@ -102,24 +120,32 @@
           ]
         }
       },
-
       "memUtilByNode": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Memory Utilization — per Node",
-            "description": "Memory utilization over time for each node. The red ★ avg workers series is the fleet average — nodes far from it are candidates for rebalancing."
+            "name": "Memory Utilization \u2014 per Node",
+            "description": "Memory utilization over time for each node. The red \u2605 avg workers series is the fleet average \u2014 nodes far from it are candidates for rebalancing."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "list"},
+              "legend": {
+                "position": "right",
+                "mode": "list"
+              },
               "yAxis": {
                 "label": "Memory Utilization",
-                "format": {"unit": "percent-decimal"},
+                "format": {
+                  "unit": "percent-decimal"
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 1, "areaOpacity": 0.05},
+              "visual": {
+                "display": "line",
+                "lineWidth": 1,
+                "areaOpacity": 0.05
+              },
               "querySettings": [
                 {
                   "queryIndex": 1,
@@ -149,7 +175,7 @@
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
                     "query": "descheduler:averageworkersutilization:memory:avg1m{}",
-                    "seriesNameFormat": "★ avg workers"
+                    "seriesNameFormat": "\u2605 avg workers"
                   }
                 }
               }
@@ -157,24 +183,32 @@
           ]
         }
       },
-
       "cpuPressureByNode": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "CPU Pressure (PSI) — per Node",
-            "description": "CPU PSI pressure over time per node. Near-zero under normal conditions. The red ★ avg workers is the fleet average."
+            "name": "CPU Pressure (PSI) \u2014 per Node",
+            "description": "CPU PSI pressure over time per node. Near-zero under normal conditions. The red \u2605 avg workers is the fleet average."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "list"},
+              "legend": {
+                "position": "right",
+                "mode": "list"
+              },
               "yAxis": {
                 "label": "CPU Pressure",
-                "format": {"unit": "percent-decimal"},
+                "format": {
+                  "unit": "percent-decimal"
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 1, "areaOpacity": 0.05},
+              "visual": {
+                "display": "line",
+                "lineWidth": 1,
+                "areaOpacity": 0.05
+              },
               "querySettings": [
                 {
                   "queryIndex": 1,
@@ -204,7 +238,7 @@
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
                     "query": "descheduler:averageworkerspressure:cpu:avg1m{}",
-                    "seriesNameFormat": "★ avg workers"
+                    "seriesNameFormat": "\u2605 avg workers"
                   }
                 }
               }
@@ -212,24 +246,32 @@
           ]
         }
       },
-
       "memPressureByNode": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Memory Pressure (PSI) — per Node",
-            "description": "Memory PSI pressure over time per node. Near-zero under normal conditions. The red ★ avg workers is the fleet average."
+            "name": "Memory Pressure (PSI) \u2014 per Node",
+            "description": "Memory PSI pressure over time per node. Near-zero under normal conditions. The red \u2605 avg workers is the fleet average."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "list"},
+              "legend": {
+                "position": "right",
+                "mode": "list"
+              },
               "yAxis": {
                 "label": "Memory Pressure",
-                "format": {"unit": "percent-decimal"},
+                "format": {
+                  "unit": "percent-decimal"
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 1, "areaOpacity": 0.05},
+              "visual": {
+                "display": "line",
+                "lineWidth": 1,
+                "areaOpacity": 0.05
+              },
               "querySettings": [
                 {
                   "queryIndex": 1,
@@ -259,7 +301,7 @@
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
                     "query": "descheduler:averageworkerspressure:memory:avg1m{}",
-                    "seriesNameFormat": "★ avg workers"
+                    "seriesNameFormat": "\u2605 avg workers"
                   }
                 }
               }
@@ -267,7 +309,6 @@
           ]
         }
       },
-
       "utilizationValues": {
         "kind": "Panel",
         "spec": {
@@ -278,25 +319,35 @@
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "table", "values": ["last"]},
+              "legend": {
+                "position": "right",
+                "mode": "table",
+                "values": [
+                  "last"
+                ]
+              },
               "yAxis": {
                 "label": "Utilization Value",
-                "format": {"unit": "percent-decimal"},
+                "format": {
+                  "unit": "percent-decimal"
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 1, "areaOpacity": 0.05},
+              "visual": {
+                "display": "line",
+                "lineWidth": 1,
+                "areaOpacity": 0.05
+              },
               "querySettings": [
                 {
                   "queryIndex": 1,
                   "colorMode": "fixed-single",
-                  "colorValue": "#f2495c",
-                  "lineStyle": "dashed"
+                  "colorValue": "#f2495c"
                 },
                 {
                   "queryIndex": 2,
                   "colorMode": "fixed-single",
-                  "colorValue": "#ff9830",
-                  "lineStyle": "dashed"
+                  "colorValue": "#ff9830"
                 }
               ]
             }
@@ -341,7 +392,6 @@
           ]
         }
       },
-
       "nodeClassification": {
         "kind": "Panel",
         "spec": {
@@ -352,27 +402,38 @@
           "plugin": {
             "kind": "StatusHistoryChart",
             "spec": {
-              "legend": {"position": "bottom"},
+              "legend": {
+                "position": "bottom"
+              },
               "mappings": [
                 {
                   "kind": "Value",
                   "spec": {
                     "value": "0",
-                    "result": {"value": "Underutilized", "color": "#5794f2"}
+                    "result": {
+                      "value": "Underutilized",
+                      "color": "#5794f2"
+                    }
                   }
                 },
                 {
                   "kind": "Value",
                   "spec": {
                     "value": "1",
-                    "result": {"value": "Normal", "color": "#73bf69"}
+                    "result": {
+                      "value": "Normal",
+                      "color": "#73bf69"
+                    }
                   }
                 },
                 {
                   "kind": "Value",
                   "spec": {
                     "value": "2",
-                    "result": {"value": "Overutilized", "color": "#f2495c"}
+                    "result": {
+                      "value": "Overutilized",
+                      "color": "#f2495c"
+                    }
                   }
                 }
               ]
@@ -394,7 +455,6 @@
           ]
         }
       },
-
       "totalEvictions": {
         "kind": "Panel",
         "spec": {
@@ -406,7 +466,10 @@
             "kind": "StatChart",
             "spec": {
               "calculation": "last-number",
-              "format": {"unit": "decimal", "decimalPlaces": 0}
+              "format": {
+                "unit": "decimal",
+                "decimalPlaces": 0
+              }
             }
           },
           "queries": [
@@ -425,24 +488,36 @@
           ]
         }
       },
-
       "evictionsRate": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Evictions (KubeVirtRelieveAndMigrate) — per Node, rolling 5 min",
+            "name": "Evictions (KubeVirtRelieveAndMigrate) \u2014 per Node, rolling 5 min",
             "description": "Number of successful evictions in the trailing 5-minute window per node. A single eviction event appears as 1 for ~5 minutes then drops back to 0."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "table", "values": ["last"]},
+              "legend": {
+                "position": "right",
+                "mode": "table",
+                "values": [
+                  "last"
+                ]
+              },
               "yAxis": {
                 "label": "Evictions (last 5 min)",
-                "format": {"unit": "decimal", "decimalPlaces": 0},
+                "format": {
+                  "unit": "decimal",
+                  "decimalPlaces": 0
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 2, "areaOpacity": 0.4}
+              "visual": {
+                "display": "line",
+                "lineWidth": 2,
+                "areaOpacity": 0.4
+              }
             }
           },
           "queries": [
@@ -461,24 +536,90 @@
           ]
         }
       },
-
       "evictionHistory": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Recent Evictions — by Node & Namespace",
-            "description": "Top $limit most recent evictions, one row per (node, namespace) pair, sorted by last eviction time. Timestamps are derived from when the descheduler_pods_evicted counter last changed — accuracy is within the scrape interval (~1–2 min). The 6 h lookback is relative to the end of the selected time window, not to wall-clock now."
+            "name": "Recent Evictions \u2014 by Node & Namespace",
+            "description": "$limit (node, namespace) pairs with the most recent eviction in the trailing 6 hours, sorted by recency (smallest = most recent). \"Last eviction\" shows how long ago the last eviction was detected, measured from now. Lookback is fixed at 6 h from the end of the selected time window."
           },
           "plugin": {
             "kind": "Table",
             "spec": {
               "density": "compact",
-              "defaultColumnHidden": true,
               "columnSettings": [
-                {"name": "node",               "header": "Node",         "enableSorting": true, "hide": false},
-                {"name": "exported_namespace", "header": "Namespace",    "enableSorting": true, "hide": false},
-                {"name": "value",              "header": "Last evicted", "enableSorting": true, "hide": false, "sort": "desc", "align": "right",
-                  "format": {"unit": "datetime-local"}}
+                {
+                  "name": "node",
+                  "header": "Node",
+                  "enableSorting": true
+                },
+                {
+                  "name": "exported_namespace",
+                  "header": "Namespace",
+                  "enableSorting": true
+                },
+                {
+                  "name": "value",
+                  "header": "Last eviction",
+                  "enableSorting": true,
+                  "sort": "asc",
+                  "align": "right",
+                  "format": {
+                    "unit": "seconds"
+                  }
+                },
+                {
+                  "name": "timestamp",
+                  "hide": true
+                },
+                {
+                  "name": "endpoint",
+                  "hide": true
+                },
+                {
+                  "name": "instance",
+                  "hide": true
+                },
+                {
+                  "name": "job",
+                  "hide": true
+                },
+                {
+                  "name": "managed_cluster",
+                  "hide": true
+                },
+                {
+                  "name": "namespace",
+                  "hide": true
+                },
+                {
+                  "name": "pod",
+                  "hide": true
+                },
+                {
+                  "name": "pod_namespace",
+                  "hide": true
+                },
+                {
+                  "name": "profile",
+                  "hide": true
+                },
+                {
+                  "name": "prometheus",
+                  "hide": true
+                },
+                {
+                  "name": "result",
+                  "hide": true
+                },
+                {
+                  "name": "service",
+                  "hide": true
+                },
+                {
+                  "name": "strategy",
+                  "hide": true
+                }
               ]
             }
           },
@@ -489,7 +630,7 @@
                 "plugin": {
                   "kind": "PrometheusTimeSeriesQuery",
                   "spec": {
-                    "query": "topk($limit, max_over_time(timestamp(delta(descheduler_pods_evicted{profile=\"KubeVirtRelieveAndMigrate\", result=\"success\", node=~\"$node\"}[2m]) > 0)[6h:2m]))"
+                    "query": "bottomk($limit, time() - (max_over_time((time() * (delta(descheduler_pods_evicted{profile=\"KubeVirtRelieveAndMigrate\", result=\"success\", node=~\"$node\"}[5m]) >= bool 1))[6h:1m]) > 0))"
                   }
                 }
               }
@@ -497,24 +638,36 @@
           ]
         }
       },
-
       "evictionsTimeSeries": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Pods Evicted (KubeVirtRelieveAndMigrate) — per Node",
+            "name": "Pods Evicted (KubeVirtRelieveAndMigrate) \u2014 per Node",
             "description": "Cumulative successful evictions over time broken down by source node."
           },
           "plugin": {
             "kind": "TimeSeriesChart",
             "spec": {
-              "legend": {"position": "right", "mode": "table", "values": ["last"]},
+              "legend": {
+                "position": "right",
+                "mode": "table",
+                "values": [
+                  "last"
+                ]
+              },
               "yAxis": {
                 "label": "Evicted Pods",
-                "format": {"unit": "decimal", "decimalPlaces": 0},
+                "format": {
+                  "unit": "decimal",
+                  "decimalPlaces": 0
+                },
                 "min": 0
               },
-              "visual": {"display": "line", "lineWidth": 2, "areaOpacity": 0.1}
+              "visual": {
+                "display": "line",
+                "lineWidth": 2,
+                "areaOpacity": 0.1
+              }
             }
           },
           "queries": [
@@ -533,20 +686,36 @@
           ]
         }
       }
-
     },
-
     "layouts": [
       {
         "kind": "Grid",
         "spec": {
           "display": {
-            "title": "Utilization — CPU & Memory per Node",
-            "collapse": {"open": true}
+            "title": "Utilization \u2014 CPU & Memory per Node",
+            "collapse": {
+              "open": true
+            }
           },
           "items": [
-            {"x": 0,  "y": 0, "width": 12, "height": 10, "content": {"$ref": "#/spec/panels/cpuUtilByNode"}},
-            {"x": 12, "y": 0, "width": 12, "height": 10, "content": {"$ref": "#/spec/panels/memUtilByNode"}}
+            {
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/cpuUtilByNode"
+              }
+            },
+            {
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/memUtilByNode"
+              }
+            }
           ]
         }
       },
@@ -554,12 +723,30 @@
         "kind": "Grid",
         "spec": {
           "display": {
-            "title": "Pressure (PSI) — CPU & Memory per Node",
-            "collapse": {"open": true}
+            "title": "Pressure (PSI) \u2014 CPU & Memory per Node",
+            "collapse": {
+              "open": true
+            }
           },
           "items": [
-            {"x": 0,  "y": 0, "width": 12, "height": 10, "content": {"$ref": "#/spec/panels/cpuPressureByNode"}},
-            {"x": 12, "y": 0, "width": 12, "height": 10, "content": {"$ref": "#/spec/panels/memPressureByNode"}}
+            {
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/cpuPressureByNode"
+              }
+            },
+            {
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/memPressureByNode"
+              }
+            }
           ]
         }
       },
@@ -568,10 +755,20 @@
         "spec": {
           "display": {
             "title": "Synthetic Utilization Value & Dynamic Thresholds",
-            "collapse": {"open": true}
+            "collapse": {
+              "open": true
+            }
           },
           "items": [
-            {"x": 0, "y": 0, "width": 24, "height": 10, "content": {"$ref": "#/spec/panels/utilizationValues"}}
+            {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/utilizationValues"
+              }
+            }
           ]
         }
       },
@@ -580,10 +777,20 @@
         "spec": {
           "display": {
             "title": "Node Classification over Time",
-            "collapse": {"open": true}
+            "collapse": {
+              "open": true
+            }
           },
           "items": [
-            {"x": 0, "y": 0, "width": 24, "height": 10, "content": {"$ref": "#/spec/panels/nodeClassification"}}
+            {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/nodeClassification"
+              }
+            }
           ]
         }
       },
@@ -592,16 +799,50 @@
         "spec": {
           "display": {
             "title": "Evictions",
-            "collapse": {"open": true}
+            "collapse": {
+              "open": true
+            }
           },
           "items": [
-            {"x": 0,  "y": 0, "width":  4, "height":  4, "content": {"$ref": "#/spec/panels/totalEvictions"}},
-            {"x": 4,  "y": 0, "width": 20, "height":  8, "content": {"$ref": "#/spec/panels/evictionsTimeSeries"}},
-            {"x": 0,  "y": 8, "width": 24, "height":  8, "content": {"$ref": "#/spec/panels/evictionsRate"}},
-            {"x": 0,  "y": 16, "width": 24, "height": 10, "content": {"$ref": "#/spec/panels/evictionHistory"}}
+            {
+              "x": 0,
+              "y": 0,
+              "width": 4,
+              "height": 4,
+              "content": {
+                "$ref": "#/spec/panels/totalEvictions"
+              }
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "width": 20,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/evictionsTimeSeries"
+              }
+            },
+            {
+              "x": 0,
+              "y": 8,
+              "width": 24,
+              "height": 8,
+              "content": {
+                "$ref": "#/spec/panels/evictionsRate"
+              }
+            },
+            {
+              "x": 0,
+              "y": 16,
+              "width": 24,
+              "height": 10,
+              "content": {
+                "$ref": "#/spec/panels/evictionHistory"
+              }
+            }
           ]
         }
-      },
+      }
     ]
   }
 }
